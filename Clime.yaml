@@ -1,0 +1,145 @@
+openapi: "3.0.0"
+info:
+  title: Open Meteo Historical Weather API
+  description: Retrieve historical weather data for any specific location. That includes parameters such as temperature,  rain and timezone support.  
+  version: "1.0.0"
+  contact:
+    name: Nyingi Joseph
+    email: mrjosephvia@gmail.com
+servers:
+  - url: https://api.open-meteo.com/v1
+    description: Open Meteo API Server
+paths:
+  /historical-weather:
+    get:
+      summary: Get historical weather forecast
+      description: Retrieve historical weather data for a specific location and date range.
+      parameters:
+        - name: latitude
+          in: query
+          description: Latitude of the location
+          required: true
+          schema:
+            type: number
+            example: -1.5223
+        - name: longitude
+          in: query
+          description: Longitude of the location
+          required: true
+          schema:
+            type: number
+            example: 37.2652
+        - name: start_date
+          in: query
+          description: Start date of the data range (YYYY-MM-DD)
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2022-01-01"
+        - name: end_date
+          in: query
+          description: End date of the data range (YYYY-MM-DD)
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2023-12-31"
+        - name: weather_parameters
+          in: query
+          description: Comma-separated weather parameters (e.g., temperature, rain)
+          required: true
+          schema:
+            type: string
+            example: temperature,rain
+        - name: file_format
+          in: query
+          description: Desired file format (CSV or JSON)
+          required: true
+          schema:
+            type: string
+            enum:
+              - CSV
+              - JSON
+            example: CSV
+        - name: units
+          in: query
+          description: Measurement units (metric or imperial)
+          required: true
+          schema:
+            type: string
+            enum:
+              - metric
+              - imperial
+            example: metric
+        - name: timezone
+          in: query
+          description: Timezone for the data (e.g., UTC, local)
+          required: false
+          schema:
+            type: string
+            example: UTC
+      responses:
+        "200":
+          description: Successful response with historical weather data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    type: object
+                    properties:
+                      latitude:
+                        type: number
+                      longitude:
+                        type: number
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        temperature:
+                          type: number
+                        rain:
+                          type: number
+                        timezone:
+                          type: string
+                          description: Timezone of the data
+            text/csv:
+              schema:
+                type: string
+                description: CSV formatted weather data
+        "400":
+          description: Invalid request parameters
+        "500":
+          description: Internal server error
+components:
+  schemas:
+    HistoricalWeatherData:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        temperature:
+          type: number
+        rain:
+          type: number
+    WeatherResponse:
+      type: object
+      properties:
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/HistoricalWeatherData"
