@@ -17,6 +17,7 @@ The project includes a weather prediction API built with FastAPI, machine learni
 
 - **Python** is the project's core language for all model building, data processing, and API development.
 - **FastAPI**: A fast and modern web framework for building APIs with Python 3.7+.
+- **Postman** used to test the API
 - **Prophet**: A time series forecasting tool for weather prediction (temperature and rainfall).
 - **Pandas**: A data manipulation library for preprocessing and analyzing weather data.
 - **Uvicorn**: An ASGI server to run the FastAPI app.
