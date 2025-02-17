@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
-#from database import SessionLocal, WeatherData
-from APP.database import SessionLocal, WeatherData
+from APP.database import SessionLocal, WeatherData, User  # Import the User model as well
 from pydantic import BaseModel
 import pandas as pd
 import pickle
@@ -10,10 +9,10 @@ import os
 # Initialize FastAPI
 app = FastAPI()
 
-# Get script directory
+# Get the directory of the current script
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Load Models
+# Load the prediction models
 try:
     with open(os.path.join(BASE_DIR, "model/temp_model.pkl"), "rb") as f:
         temp_model = pickle.load(f)
@@ -23,31 +22,31 @@ try:
 except FileNotFoundError:
     raise RuntimeError("Model files not found! Ensure they exist in the correct directory.")
 
-# Dependency to get database session
+# Dependency to get a database session
 def get_db():
     db = SessionLocal()
     try:
-        return db
+        yield db
     finally:
         db.close()
 
-# Request Body Schema
+# Pydantic model for prediction requests
 class PredictionRequest(BaseModel):
     date: str
     location: str
 
 @app.post("/predict/")
 async def predict_weather(request: PredictionRequest):
-    # Parse the date
+    # Convert the input date to a datetime object
     try:
         date = pd.to_datetime(request.date)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 
-    # Create future DataFrame for prediction
+    # Create a DataFrame for prediction
     future_df = pd.DataFrame({'ds': [date]})
 
-    # Make predictions
+    # Generate predictions using the loaded models
     temp_prediction = temp_model.predict(future_df).iloc[0]["yhat"]
     rain_prediction = rain_model.predict(future_df).iloc[0]["yhat"]
 
@@ -64,3 +63,23 @@ def save_prediction(date: str, location: str, temperature: float, rain: float, d
     db.add(new_weather)
     db.commit()
     return {"message": "Prediction saved successfully"}
+
+# Pydantic model for user creation
+class UserCreate(BaseModel):
+    name: str
+    phone_number: str
+    password: str
+
+@app.post("/users/")
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    # Check if the phone number is already registered
+    existing_user = db.query(User).filter(User.phone_number == user.phone_number).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Phone number already registered")
+
+    # Create a new user instance
+    new_user = User(name=user.name, phone_number=user.phone_number, password=user.password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"message": "User created successfully", "user_id": new_user.id}
