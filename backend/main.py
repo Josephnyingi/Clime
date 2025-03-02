@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
-from APP.database import SessionLocal, WeatherData, User  # Import the User model as well
+from backend.database import SessionLocal, WeatherData, User # Import the User model as well
 from pydantic import BaseModel
 import pandas as pd
 import pickle
@@ -83,3 +83,17 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return {"message": "User created successfully", "user_id": new_user.id}
+
+# Pydantic model for login request
+class LoginRequest(BaseModel):
+    phone_number: str
+    password: str
+
+@app.post("/login/")
+def login_user(request: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.phone_number == request.phone_number).first()
+    
+    if not user or user.password != request.password:  # NOTE: In production, hash passwords!
+        raise HTTPException(status_code=401, detail="Invalid phone number or password")
+
+    return {"message": "Login successful", "user_id": user.id}
