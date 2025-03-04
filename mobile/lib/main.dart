@@ -8,6 +8,8 @@ void main() {
 }
 
 class AngaApp extends StatelessWidget {
+  const AngaApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

@@ -17,10 +17,11 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # Added http package for network requests
-  http: ^0.13.5
+  http: ^1.3.0
 
   # Added fl_chart package for graphs
-  fl_chart: ^0.62.0
+  fl_chart: ^0.70.2
+
 
 dev_dependencies:
   flutter_test:
