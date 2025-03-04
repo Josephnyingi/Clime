@@ -17,7 +17,10 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # Added http package for network requests
-  http: ^0.13.0
+  http: ^0.13.5
+
+  # Added fl_chart package for graphs
+  fl_chart: ^0.62.0
 
 dev_dependencies:
   flutter_test:
@@ -25,6 +28,3 @@ dev_dependencies:
 
   # The "flutter_lints" package below contains a set of recommended lints
   flutter_lints: ^5.0.0
-
-flutter:
-  uses-material-design: true
