@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:animate_do/animate_do.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -13,7 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _isRegistering = false; // Toggle for login/register mode
+  bool _isRegistering = false;
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
@@ -34,13 +35,15 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.statusCode == 200) {
+        _showSuccessMessage("Login successful! Redirecting...");
+        await Future.delayed(Duration(seconds: 1));
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
         final responseData = jsonDecode(response.body);
-        _showErrorDialog(responseData['detail']);
+        _showErrorMessage(responseData['detail']);
       }
     } catch (error) {
-      _showErrorDialog("Failed to connect to the server.");
+      _showErrorMessage("Failed to connect to the server.");
     }
 
     setState(() {
@@ -68,14 +71,15 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.statusCode == 200) {
-        _showSuccessDialog("User registered successfully! You can now log in.");
-        _toggleMode(); // Switch back to Login mode
+        _showSuccessMessage("User registered successfully! You can now log in.");
+        await Future.delayed(Duration(seconds: 1));
+        _toggleMode();
       } else {
         final responseData = jsonDecode(response.body);
-        _showErrorDialog(responseData['detail']);
+        _showErrorMessage(responseData['detail']);
       }
     } catch (error) {
-      _showErrorDialog("Failed to connect to the server.");
+      _showErrorMessage("Failed to connect to the server.");
     }
 
     setState(() {
@@ -83,39 +87,44 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _showErrorDialog(String message) {
+  void _showErrorMessage(String message) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text("Error"),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text("OK"),
-          )
-        ],
+      builder: (ctx) => BounceInDown(
+        duration: Duration(milliseconds: 500),
+        child: AlertDialog(
+          title: Text("Error", style: TextStyle(color: Colors.red)),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text("OK"),
+            )
+          ],
+        ),
       ),
     );
   }
 
-  void _showSuccessDialog(String message) {
+  void _showSuccessMessage(String message) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text("Success"),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text("OK"),
-          )
-        ],
+      builder: (ctx) => BounceInDown(
+        duration: Duration(milliseconds: 500),
+        child: AlertDialog(
+          title: Text("Success", style: TextStyle(color: Colors.green)),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text("OK"),
+            )
+          ],
+        ),
       ),
     );
   }
 
-  // 🔹 Toggle between Login & Register modes
   void _toggleMode() {
     setState(() {
       _isRegistering = !_isRegistering;
@@ -133,46 +142,66 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              FadeInDown(
+                duration: Duration(milliseconds: 500),
+                child: Text(
+                  _isRegistering ? "Create Account" : "Welcome Back",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(height: 20),
               if (_isRegistering) ...[
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(labelText: 'Name'),
-                  validator: (value) => value!.isEmpty ? 'Enter your name' : null,
+                FadeInLeft(
+                  duration: Duration(milliseconds: 500),
+                  child: TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(labelText: 'Name'),
+                    validator: (value) => value!.isEmpty ? 'Enter your name' : null,
+                  ),
                 ),
                 SizedBox(height: 16.0),
               ],
-              TextFormField(
-                controller: _phoneController,
-                decoration: InputDecoration(labelText: 'Phone Number'),
-                keyboardType: TextInputType.phone,
-                validator: (value) => value!.isEmpty ? 'Enter your phone number' : null,
+              FadeInLeft(
+                duration: Duration(milliseconds: 500),
+                child: TextFormField(
+                  controller: _phoneController,
+                  decoration: InputDecoration(labelText: 'Phone Number'),
+                  keyboardType: TextInputType.phone,
+                  validator: (value) => value!.isEmpty ? 'Enter your phone number' : null,
+                ),
               ),
               SizedBox(height: 16.0),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) => value!.isEmpty ? 'Enter your password' : null,
+              FadeInRight(
+                duration: Duration(milliseconds: 500),
+                child: TextFormField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(labelText: 'Password'),
+                  obscureText: true,
+                  validator: (value) => value!.isEmpty ? 'Enter your password' : null,
+                ),
               ),
               SizedBox(height: 24.0),
               _isLoading
                   ? CircularProgressIndicator()
-                  : Column(
-                      children: [
-                        ElevatedButton(
-                          onPressed: _isRegistering ? _register : _login,
-                          child: Text(_isRegistering ? 'Register' : 'Login'),
-                        ),
-                        SizedBox(height: 10),
-                        TextButton(
-                          onPressed: _toggleMode,
-                          child: Text(
-                            _isRegistering
-                                ? "Already have an account? Login"
-                                : "Don't have an account? Register",
+                  : FadeInUp(
+                      duration: Duration(milliseconds: 500),
+                      child: Column(
+                        children: [
+                          ElevatedButton(
+                            onPressed: _isRegistering ? _register : _login,
+                            child: Text(_isRegistering ? 'Register' : 'Login'),
                           ),
-                        ),
-                      ],
+                          SizedBox(height: 10),
+                          TextButton(
+                            onPressed: _toggleMode,
+                            child: Text(
+                              _isRegistering
+                                  ? "Already have an account? Login"
+                                  : "Don't have an account? Register",
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
             ],
           ),

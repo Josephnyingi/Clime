@@ -21,6 +21,7 @@ dependencies:
 
   # Added fl_chart package for graphs
   fl_chart: ^0.70.2
+  animate_do: ^4.2.0
 
 
 dev_dependencies:
