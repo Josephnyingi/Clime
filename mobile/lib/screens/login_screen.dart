@@ -9,9 +9,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isRegistering = false; // Toggle for login/register mode
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
@@ -53,9 +55,9 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
+    final String name = _nameController.text;
     final String phone = _phoneController.text;
     final String password = _passwordController.text;
-    final String name = "User"; // You can modify to accept user input for name
     final Uri url = Uri.parse("http://127.0.0.1:8000/users/");
 
     try {
@@ -67,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         _showSuccessDialog("User registered successfully! You can now log in.");
+        _toggleMode(); // Switch back to Login mode
       } else {
         final responseData = jsonDecode(response.body);
         _showErrorDialog(responseData['detail']);
@@ -112,10 +115,17 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // 🔹 Toggle between Login & Register modes
+  void _toggleMode() {
+    setState(() {
+      _isRegistering = !_isRegistering;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Anga Login')),
+      appBar: AppBar(title: Text(_isRegistering ? 'Register' : 'Login')),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Form(
@@ -123,6 +133,14 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (_isRegistering) ...[
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: 'Name'),
+                  validator: (value) => value!.isEmpty ? 'Enter your name' : null,
+                ),
+                SizedBox(height: 16.0),
+              ],
               TextFormField(
                 controller: _phoneController,
                 decoration: InputDecoration(labelText: 'Phone Number'),
@@ -142,13 +160,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   : Column(
                       children: [
                         ElevatedButton(
-                          onPressed: _login,
-                          child: Text('Login'),
+                          onPressed: _isRegistering ? _register : _login,
+                          child: Text(_isRegistering ? 'Register' : 'Login'),
                         ),
                         SizedBox(height: 10),
                         TextButton(
-                          onPressed: _register,
-                          child: Text("Register a New Account"),
+                          onPressed: _toggleMode,
+                          child: Text(
+                            _isRegistering
+                                ? "Already have an account? Login"
+                                : "Don't have an account? Register",
+                          ),
                         ),
                       ],
                     ),
