@@ -3,8 +3,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -34,10 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.statusCode == 200) {
-        // Login successful, navigate to dashboard
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
-        // Login failed, show error
         final responseData = jsonDecode(response.body);
         _showErrorDialog(responseData['detail']);
       }

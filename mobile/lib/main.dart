@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/alerts_screen.dart';
+import 'screens/settings_screen.dart'; // ✅ Imported SettingsScreen
+import 'theme.dart';
 
 void main() {
   runApp(AngaApp());
@@ -14,15 +16,15 @@ class AngaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Anga Weather',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      // The first screen that will load
+      theme: AppTheme.lightTheme,
       initialRoute: '/',
-      // Define routes for navigation
       routes: {
         '/': (context) => LoginScreen(),
         '/dashboard': (context) => DashboardScreen(),
         '/alerts': (context) => AlertsScreen(),
+        '/settings': (context) => SettingsScreen(), // ✅ Corrected reference
       },
     );
   }
 }
+
