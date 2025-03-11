@@ -46,11 +46,61 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final String phone = _phoneController.text;
+    final String password = _passwordController.text;
+    final String name = "User"; // You can modify to accept user input for name
+    final Uri url = Uri.parse("http://127.0.0.1:8000/users/");
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"name": name, "phone_number": phone, "password": password}),
+      );
+
+      if (response.statusCode == 200) {
+        _showSuccessDialog("User registered successfully! You can now log in.");
+      } else {
+        final responseData = jsonDecode(response.body);
+        _showErrorDialog(responseData['detail']);
+      }
+    } catch (error) {
+      _showErrorDialog("Failed to connect to the server.");
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text("Login Failed"),
+        title: Text("Error"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text("OK"),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("Success"),
         content: Text(message),
         actions: [
           TextButton(
@@ -89,9 +139,18 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 24.0),
               _isLoading
                   ? CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _login,
-                      child: Text('Login'),
+                  : Column(
+                      children: [
+                        ElevatedButton(
+                          onPressed: _login,
+                          child: Text('Login'),
+                        ),
+                        SizedBox(height: 10),
+                        TextButton(
+                          onPressed: _register,
+                          child: Text("Register a New Account"),
+                        ),
+                      ],
                     ),
             ],
           ),
