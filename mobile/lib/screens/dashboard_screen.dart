@@ -13,11 +13,14 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   List<FlSpot> tempSpots = [];
   List<BarChartGroupData> rainBars = [];
-  Map<String, dynamic> currentWeather = {};
   List<String> forecastDates = [];
+  Map<String, dynamic> currentWeather = {};
   bool isLoading = true;
   bool isError = false;
-  final String location = "Machakos";
+
+  String selectedLocation = "Machakos";
+  DateTime startDate = DateTime.now();
+  DateTime endDate = DateTime.now().add(Duration(days: 7));
 
   @override
   void initState() {
@@ -26,21 +29,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _fetchWeather() async {
+    setState(() => isLoading = true);
+    await _fetchCurrentWeather();
+    await _fetchForecast();
+  }
+
+  Future<void> _fetchCurrentWeather() async {
+    try {
+      final todayFormatted = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final data = await WeatherService.getWeather(todayFormatted, selectedLocation);
+
+      setState(() {
+        currentWeather = data;
+      });
+    } catch (e) {
+      print("Error fetching current weather: $e");
+      setState(() => isError = true);
+    }
+  }
+
+  Future<void> _fetchForecast() async {
     try {
       List<Map<String, dynamic>> weatherData = [];
       forecastDates.clear();
-      DateTime today = DateTime.now();
-      final todayFormatted = DateFormat('yyyy-MM-dd').format(today);
-      currentWeather = await WeatherService.getWeather(todayFormatted, location);
 
-      for (int i = 0; i < 16; i++) {
-        final date = today.add(Duration(days: i));
+      for (int i = 0; i <= endDate.difference(startDate).inDays; i++) {
+        final date = startDate.add(Duration(days: i));
         final formattedDate = DateFormat('yyyy-MM-dd').format(date);
-        var data = await WeatherService.getWeather(formattedDate, location);
+        var data = await WeatherService.getWeather(formattedDate, selectedLocation);
 
         forecastDates.add(DateFormat('MM/dd').format(date));
         weatherData.add({
-          "day": i,
+          "day": i.toDouble(),
           "temperature": data['temperature_prediction'],
           "rain": data['rain_prediction'],
         });
@@ -48,16 +68,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       setState(() {
         tempSpots = weatherData.map((entry) {
-          return FlSpot(entry["day"].toDouble(), entry["temperature"].toDouble());
+          return FlSpot(entry["day"], entry["temperature"].toDouble());
         }).toList();
 
         rainBars = weatherData.map((entry) {
           return BarChartGroupData(
-            x: entry["day"],
+            x: entry["day"].toInt(),
             barRods: [
               BarChartRodData(
                 toY: entry["rain"].toDouble(),
-                width: 10,
+                width: 8,
                 color: Colors.blueAccent,
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -68,7 +88,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         isLoading = false;
       });
     } catch (e) {
-      print("Error fetching weather data: $e");
+      print("Error fetching forecast: $e");
       setState(() {
         isLoading = false;
         isError = true;
@@ -76,13 +96,122 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  void _selectLocation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Select Location"),
+        content: DropdownButton<String>(
+          value: selectedLocation,
+          onChanged: (newValue) {
+            setState(() {
+              selectedLocation = newValue!;
+            });
+            _fetchWeather();
+            Navigator.pop(context);
+          },
+          items: ["Machakos", "Nairobi", "Mombasa", "Kisumu"].map((location) {
+            return DropdownMenuItem(
+              value: location,
+              child: Text(location),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDateRange() async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      initialDateRange: DateTimeRange(start: startDate, end: endDate),
+    );
+
+    if (picked != null) {
+      setState(() {
+        startDate = picked.start;
+        endDate = picked.end;
+      });
+      _fetchForecast();
+    }
+  }
+
+  Widget _buildComboChart() {
+    return Container(
+      height: 300,
+      child: Stack(
+        children: [
+          // Rainfall Bar Chart
+          BarChart(
+            BarChartData(
+              barGroups: rainBars,
+              gridData: FlGridData(show: false),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      int index = value.toInt();
+                      return index < forecastDates.length
+                          ? Text(forecastDates[index], style: TextStyle(fontSize: 12))
+                          : Text("");
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Temperature Line Chart
+          LineChart(
+            LineChartData(
+              lineBarsData: [
+                LineChartBarData(
+                  spots: tempSpots,
+                  isCurved: true,
+                  color: Colors.redAccent,
+                  barWidth: 3,
+                  isStrokeCapRound: true,
+                  belowBarData: BarAreaData(
+                      show: true, color: Colors.redAccent.withOpacity(0.3)),
+                ),
+              ],
+              gridData: FlGridData(show: false),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('16-Day Weather Forecast', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('Weather Dashboard'),
         backgroundColor: Colors.blueAccent,
         elevation: 5,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.location_on),
+            onPressed: _selectLocation,
+          ),
+          IconButton(
+            icon: Icon(Icons.calendar_today),
+            onPressed: _selectDateRange,
+          ),
+        ],
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -100,21 +229,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             children: [
-                              Text("Current Weather in $location",
+                              Text("Current Weather in $selectedLocation",
                                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                               SizedBox(height: 10),
                               Text(
                                 "Temperature: ${currentWeather['temperature_prediction']}°C",
-                                style: TextStyle(fontSize: 18, color: Colors.redAccent.shade200),
+                                style: TextStyle(fontSize: 18, color: Colors.redAccent),
                               ),
                               Text(
                                 "Rainfall: ${currentWeather['rain_prediction']} mm",
                                 style: TextStyle(fontSize: 18, color: Colors.blueAccent),
-                              ),
-                              SizedBox(height: 10),
-                              Text(
-                                "Date: ${DateFormat('EEEE, MMM d, yyyy').format(DateTime.now())}",
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                               ),
                             ],
                           ),
@@ -122,13 +246,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     SizedBox(height: 15),
-                    FadeInLeft(
-                      child: Text(
-                        "Weather Predictions (Next 16 Days)",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    SizedBox(height: 10),
                     Card(
                       elevation: 6,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -137,91 +254,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            Text("Temperature Trends", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            Text("Weather Trends", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                             SizedBox(height: 10),
-                            Container(
-                              height: 250,
-                              child: LineChart(
-                                LineChartData(
-                                  lineBarsData: [
-                                    LineChartBarData(
-                                      spots: tempSpots,
-                                      isCurved: true,
-                                      gradient: LinearGradient(
-                                        colors: [Colors.redAccent.shade200, Colors.orange.shade300],
-                                      ),
-                                      barWidth: 3,
-                                      belowBarData: BarAreaData(
-                                        show: true,
-                                        gradient: LinearGradient(
-                                          colors: [Colors.redAccent.shade100.withOpacity(0.3), Colors.orange.shade100.withOpacity(0.3)],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                  borderData: FlBorderData(show: false),
-                                  titlesData: FlTitlesData(show: false),
-                                ),
-                              ),
-                            ),
+                            _buildComboChart(),
                           ],
                         ),
                       ),
                     ),
-                    SizedBox(height: 15),
-                    Card(
-                      elevation: 6,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      color: Colors.white.withOpacity(0.9),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            Text("Rainfall Forecast", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                            SizedBox(height: 10),
-                            Container(
-                              height: 250,
-                              child: BarChart(
-                                BarChartData(
-                                  barGroups: rainBars,
-                                  gridData: FlGridData(show: false),
-                                  borderData: FlBorderData(show: false),
-                                  titlesData: FlTitlesData(
-                                    bottomTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        getTitlesWidget: (value, meta) {
-                                          return Text(forecastDates[value.toInt()],
-                                              style: TextStyle(fontSize: 12));
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 15),
-                    Card(
-                      elevation: 6,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      color: Colors.redAccent.withOpacity(0.8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.warning, color: Colors.white, size: 30),
-                            SizedBox(width: 10),
-                            Text("Extreme Weather Alerts", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
                   ],
                 ),
               ),
