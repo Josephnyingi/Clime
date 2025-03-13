@@ -3,14 +3,16 @@ import '../services/weather_services.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // ✅ Added for location & theme sync
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+  
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  DashboardScreenState createState() => DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class DashboardScreenState extends State<DashboardScreen> {
   List<FlSpot> tempSpots = [];
   List<BarChartGroupData> rainBars = [];
   List<String> forecastDates = [];
@@ -18,14 +20,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isLoading = true;
   bool isError = false;
 
-  String selectedLocation = "Machakos";
-  DateTime startDate = DateTime.now();
-  DateTime endDate = DateTime.now().add(Duration(days: 7));
+  String selectedLocation = "Machakos"; // ✅ Default location
+  bool isDarkMode = false; // ✅ Track dark mode state
 
   @override
   void initState() {
     super.initState();
+    _loadPreferences();
     _fetchWeather();
+  }
+
+  /// **✅ Load location & theme settings from SharedPreferences**
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      selectedLocation = prefs.getString('location') ?? "Machakos";
+      isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    });
+    _fetchWeather(); // Fetch weather after loading preferences
   }
 
   Future<void> _fetchWeather() async {
@@ -52,6 +64,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       List<Map<String, dynamic>> weatherData = [];
       forecastDates.clear();
+      DateTime startDate = DateTime.now();
+      DateTime endDate = DateTime.now().add(const Duration(days: 7));
 
       for (int i = 0; i <= endDate.difference(startDate).inDays; i++) {
         final date = startDate.add(Duration(days: i));
@@ -96,50 +110,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _selectLocation() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Select Location"),
-        content: DropdownButton<String>(
-          value: selectedLocation,
-          onChanged: (newValue) {
-            setState(() {
-              selectedLocation = newValue!;
-            });
-            _fetchWeather();
-            Navigator.pop(context);
-          },
-          items: ["Machakos", "Nairobi", "Mombasa", "Kisumu"].map((location) {
-            return DropdownMenuItem(
-              value: location,
-              child: Text(location),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _selectDateRange() async {
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      initialDateRange: DateTimeRange(start: startDate, end: endDate),
-    );
-
-    if (picked != null) {
-      setState(() {
-        startDate = picked.start;
-        endDate = picked.end;
-      });
-      _fetchForecast();
-    }
-  }
-
   Widget _buildComboChart() {
-    return Container(
+    return SizedBox(
       height: 300,
       child: Stack(
         children: [
@@ -159,8 +131,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     getTitlesWidget: (value, meta) {
                       int index = value.toInt();
                       return index < forecastDates.length
-                          ? Text(forecastDates[index], style: TextStyle(fontSize: 12))
-                          : Text("");
+                          ? Text(forecastDates[index], style: const TextStyle(fontSize: 12))
+                          : const Text("");
                     },
                   ),
                 ),
@@ -199,22 +171,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Weather Dashboard'),
+        title: Text(
+          'Weather Dashboard',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isDarkMode ? Colors.white : Colors.black, // ✅ Adjusted for visibility
+          ),
+        ),
         backgroundColor: Colors.blueAccent,
         elevation: 5,
         actions: [
           IconButton(
-            icon: Icon(Icons.location_on),
-            onPressed: _selectLocation,
-          ),
-          IconButton(
-            icon: Icon(Icons.calendar_today),
-            onPressed: _selectDateRange,
+            icon: const Icon(Icons.settings),
+            onPressed: () async {
+              await Navigator.pushNamed(context, '/settings');
+              _loadPreferences(); // ✅ Reload preferences when returning
+            },
           ),
         ],
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -229,23 +206,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             children: [
-                              Text("Current Weather in $selectedLocation",
-                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                              SizedBox(height: 10),
+                              Text(
+                                "Current Weather in $selectedLocation", // ✅ Dynamically updates
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDarkMode ? Colors.white : Colors.black87, // ✅ Adjusted for visibility
+                                ),
+                              ),
+                              const SizedBox(height: 10),
                               Text(
                                 "Temperature: ${currentWeather['temperature_prediction']}°C",
-                                style: TextStyle(fontSize: 18, color: Colors.redAccent),
+                                style: const TextStyle(fontSize: 18, color: Colors.redAccent),
                               ),
                               Text(
                                 "Rainfall: ${currentWeather['rain_prediction']} mm",
-                                style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+                                style: const TextStyle(fontSize: 18, color: Colors.blueAccent),
                               ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     Card(
                       elevation: 6,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -254,8 +237,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            Text("Weather Trends", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                            SizedBox(height: 10),
+                            const Text("Weather Trends", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 10),
                             _buildComboChart(),
                           ],
                         ),
