@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/alerts_screen.dart';
@@ -8,20 +9,40 @@ void main() {
   runApp(AngaApp());
 }
 
-class AngaApp extends StatelessWidget {
+class AngaApp extends StatefulWidget {
+  @override
+  AngaAppState createState() => AngaAppState();
+}
+
+class AngaAppState extends State<AngaApp> {
+  bool isDarkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Anga Weather App',
-      theme: ThemeData.light(),  
-      darkTheme: ThemeData.dark(),  
-      themeMode: ThemeMode.light,  // ✅ Removed auto dark mode
-      home: LoginScreen(), // ✅ Removed const (dynamic content)
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light, // ✅ Fixed theme mode
+      home: LoginScreen(),
       routes: {
-        '/dashboard': (context) => MainScreen(),  // ✅ Removed const
-        '/alerts': (context) => AlertsScreen(),   // ✅ Removed const
-        '/settings': (context) => SettingsScreen(), // ✅ Removed const
+        '/dashboard': (context) => MainScreen(),
+        '/alerts': (context) => AlertsScreen(),
+        '/settings': (context) => SettingsScreen(),
       },
     );
   }
@@ -35,31 +56,31 @@ class MainScreen extends StatefulWidget {
 class MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  // **List of screens for navigation**
   final List<Widget> _screens = [
     DashboardScreen(),
     AlertsScreen(),
     SettingsScreen(),
   ];
 
-  // **Tab Switching**
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index != _selectedIndex) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedSwitcher( // ✅ Smooth transitions when switching tabs
-        duration: const Duration(milliseconds: 300),
-        child: _screens[_selectedIndex],
+      body: IndexedStack( // ✅ Keeps state when switching tabs
+        index: _selectedIndex,
+        children: _screens,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _fetchWeatherUpdate,
         backgroundColor: Colors.blueAccent,
-        child: const Icon(Icons.refresh, size: 28),
+        child: Icon(Icons.refresh, size: 28),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -67,7 +88,7 @@ class MainScreenState extends State<MainScreen> {
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
         onTap: _onItemTapped,
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: "Dashboard",
@@ -87,7 +108,7 @@ class MainScreenState extends State<MainScreen> {
 
   void _fetchWeatherUpdate() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text("Fetching latest weather update..."),
         duration: Duration(seconds: 2),
       ),
