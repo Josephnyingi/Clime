@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AlertsScreen extends StatefulWidget {
+  const AlertsScreen({super.key});
+
   @override
   _AlertsScreenState createState() => _AlertsScreenState();
 }

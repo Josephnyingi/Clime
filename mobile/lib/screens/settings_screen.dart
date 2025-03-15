@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, required Future<void> Function(bool value) setTheme});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();

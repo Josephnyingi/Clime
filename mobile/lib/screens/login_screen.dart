@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:animate_do/animate_do.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }

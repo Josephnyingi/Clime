@@ -7,7 +7,7 @@ import '../widgets/weather_chart.dart'; // ✅ Modularized chart widget
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
-  
+
   @override
   DashboardScreenState createState() => DashboardScreenState();
 }
@@ -18,9 +18,8 @@ class DashboardScreenState extends State<DashboardScreen> {
   List<String> forecastDates = [];
   Map<String, dynamic> currentWeather = {};
   bool isLoading = true;
-
-  String selectedLocation = "Machakos";
   bool isDarkMode = false;
+  String selectedLocation = "Machakos";
 
   @override
   void initState() {
@@ -54,7 +53,7 @@ class DashboardScreenState extends State<DashboardScreen> {
         isLoading = false;
       });
     } catch (e) {
-      print("Error fetching current weather: $e");
+      debugPrint("Error fetching current weather: $e"); // ✅ FIX: Removed print()
       setState(() => isLoading = false);
     }
   }
@@ -78,22 +77,26 @@ class DashboardScreenState extends State<DashboardScreen> {
       }
 
       setState(() {
-        tempSpots = weatherData.map((entry) => FlSpot(entry["day"], entry["temperature"].toDouble())).toList(); // ✅ FIX: Correct FlSpot usage
+        tempSpots = weatherData
+            .map((entry) => FlSpot(entry["day"], entry["temperature"].toDouble()))
+            .toList(); // ✅ FIX: Correct FlSpot usage
 
-        rainBars = weatherData.map((entry) => BarChartGroupData(
-          x: entry["day"].toInt(),
-          barRods: [
-            BarChartRodData( // ✅ FIX: Correct BarChartRodData usage
-              toY: entry["rain"].toDouble(),
-              width: 8,
-              color: Colors.blueAccent,
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ],
-        )).toList();
+        rainBars = weatherData
+            .map((entry) => BarChartGroupData(
+                  x: entry["day"].toInt(),
+                  barRods: [
+                    BarChartRodData(
+                      toY: entry["rain"].toDouble(),
+                      width: 8,
+                      color: Colors.blueAccent,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ],
+                ))
+            .toList();
       });
     } catch (e) {
-      print("Error fetching forecast: $e");
+      debugPrint("Error fetching forecast: $e"); // ✅ FIX: Removed print()
     }
   }
 
