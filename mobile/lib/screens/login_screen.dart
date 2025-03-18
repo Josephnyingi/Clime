@@ -33,7 +33,6 @@ class LoginScreenState extends State<LoginScreen> {
     bool isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
 
     if (isLoggedIn) {
-      // If the user is already logged in, redirect to the dashboard
       Future.delayed(Duration.zero, () {
         Navigator.pushReplacementNamed(context, '/dashboard');
       });
@@ -43,7 +42,6 @@ class LoginScreenState extends State<LoginScreen> {
   /// ✅ **Login User**
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
     final Uri url = Uri.parse("$API_BASE_URL/login/");
@@ -59,8 +57,8 @@ class LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool("isLoggedIn", true); // ✅ Store login state
-        await prefs.setString("phone_number", phone); // ✅ Store user info if needed
+        await prefs.setBool("isLoggedIn", true);
+        await prefs.setString("phone_number", phone);
 
         _showSuccessMessage("Login successful! Redirecting...");
         await Future.delayed(const Duration(seconds: 1));
@@ -80,7 +78,6 @@ class LoginScreenState extends State<LoginScreen> {
   /// ✅ **Register User**
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
     final Uri url = Uri.parse("$API_BASE_URL/users/");
@@ -159,82 +156,85 @@ class LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isRegistering ? 'Register' : 'Login')),
+      backgroundColor: Colors.white,
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FadeInDown(
-                duration: const Duration(milliseconds: 500),
-                child: Text(
-                  _isRegistering ? "Create Account" : "Welcome Back",
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // ✅ **Anga Image**
+            FadeInDown(
+              duration: const Duration(milliseconds: 500),
+              child: Image.asset(
+                'assets/images/farming.jpg', // 📌 Add this image to assets/images/
+                height: 200,
               ),
-              const SizedBox(height: 20),
-              if (_isRegistering) ...[
-                FadeInLeft(
-                  duration: const Duration(milliseconds: 500),
-                  child: TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                    validator: (value) => value!.trim().isEmpty ? 'Enter your name' : null,
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-              ],
-              FadeInLeft(
-                duration: const Duration(milliseconds: 500),
-                child: TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(labelText: 'Phone Number'),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) => value!.trim().isEmpty ? 'Enter your phone number' : null,
-                ),
+            ),
+            const SizedBox(height: 10),
+
+            // ✅ **Anga Description**
+            FadeInUp(
+              duration: const Duration(milliseconds: 500),
+              child: Text(
+                "Anga - Smart Climate Insights for Farmers",
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16.0),
-              FadeInRight(
-                duration: const Duration(milliseconds: 500),
-                child: TextFormField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  obscureText: true,
-                  validator: (value) => value!.trim().isEmpty ? 'Enter your password' : null,
-                ),
-              ),
-              const SizedBox(height: 24.0),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : FadeInUp(
-                      duration: const Duration(milliseconds: 500),
-                      child: Column(
-                        children: [
-                          ElevatedButton(
-                            onPressed: _isRegistering ? _register : _login,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent,
-                              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                              textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            child: Text(_isRegistering ? 'Register' : 'Login'),
-                          ),
-                          const SizedBox(height: 10),
-                          TextButton(
-                            onPressed: _toggleMode,
-                            child: Text(
-                              _isRegistering
-                                  ? "Already have an account? Login"
-                                  : "Don't have an account? Register",
-                            ),
-                          ),
-                        ],
-                      ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              "Accurate weather forecasts to help farmers plan and increase productivity.",
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+
+            const SizedBox(height: 20),
+
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  if (_isRegistering)
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(labelText: 'Name'),
+                      validator: (value) => value!.trim().isEmpty ? 'Enter your name' : null,
                     ),
-            ],
-          ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(labelText: 'Phone Number'),
+                    keyboardType: TextInputType.phone,
+                    validator: (value) => value!.trim().isEmpty ? 'Enter your phone number' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(labelText: 'Password'),
+                    obscureText: true,
+                    validator: (value) => value!.trim().isEmpty ? 'Enter your password' : null,
+                  ),
+                  const SizedBox(height: 20),
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: _isRegistering ? _register : _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                          ),
+                          child: Text(_isRegistering ? 'Register' : 'Login'),
+                        ),
+                  TextButton(
+                    onPressed: _toggleMode,
+                    child: Text(_isRegistering
+                        ? "Already have an account? Login"
+                        : "Don't have an account? Register"),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

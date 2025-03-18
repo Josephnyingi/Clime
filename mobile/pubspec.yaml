@@ -48,3 +48,8 @@ flutter:
   # ✅ Ensure Material icons are enabled
   uses-material-design: true
 
+  # ✅ Declare assets (images, icons, fonts)
+  assets:
+    - assets/images/farming.jpg
+    
+
