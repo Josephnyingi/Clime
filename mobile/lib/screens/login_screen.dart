@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:animate_do/animate_do.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/constants.dart'; // ✅ Import Constants
+import '../utils/helpers.dart';   // ✅ Import Helpers
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -18,16 +21,34 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isRegistering = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  /// ✅ **Check if user is already logged in**
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
+
+    if (isLoggedIn) {
+      // If the user is already logged in, redirect to the dashboard
+      Future.delayed(Duration.zero, () {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      });
+    }
+  }
+
+  /// ✅ **Login User**
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
-    final String phone = _phoneController.text;
-    final String password = _passwordController.text;
-    final Uri url = Uri.parse("http://127.0.0.1:8000/login/");
+    final Uri url = Uri.parse("$API_BASE_URL/login/");
+    final String phone = _phoneController.text.trim();
+    final String password = _passwordController.text.trim();
 
     try {
       final response = await http.post(
@@ -37,33 +58,35 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.statusCode == 200) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool("isLoggedIn", true); // ✅ Store login state
+        await prefs.setString("phone_number", phone); // ✅ Store user info if needed
+
         _showSuccessMessage("Login successful! Redirecting...");
-        await Future.delayed(Duration(seconds: 1));
+        await Future.delayed(const Duration(seconds: 1));
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
         final responseData = jsonDecode(response.body);
         _showErrorMessage(responseData['detail']);
       }
     } catch (error) {
+      logMessage("Login failed: $error");
       _showErrorMessage("Failed to connect to the server.");
     }
 
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
   }
 
+  /// ✅ **Register User**
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
-    final String name = _nameController.text;
-    final String phone = _phoneController.text;
-    final String password = _passwordController.text;
-    final Uri url = Uri.parse("http://127.0.0.1:8000/users/");
+    final Uri url = Uri.parse("$API_BASE_URL/users/");
+    final String name = _nameController.text.trim();
+    final String phone = _phoneController.text.trim();
+    final String password = _passwordController.text.trim();
 
     try {
       final response = await http.post(
@@ -74,33 +97,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         _showSuccessMessage("User registered successfully! You can now log in.");
-        await Future.delayed(Duration(seconds: 1));
+        await Future.delayed(const Duration(seconds: 1));
         _toggleMode();
       } else {
         final responseData = jsonDecode(response.body);
         _showErrorMessage(responseData['detail']);
       }
     } catch (error) {
+      logMessage("Registration failed: $error");
       _showErrorMessage("Failed to connect to the server.");
     }
 
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
   }
 
+  /// ✅ **Show Error Message**
   void _showErrorMessage(String message) {
     showDialog(
       context: context,
       builder: (ctx) => BounceInDown(
-        duration: Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 500),
         child: AlertDialog(
-          title: Text("Error", style: TextStyle(color: Colors.red)),
+          title: const Text("Error", style: TextStyle(color: Colors.red)),
           content: Text(message),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text("OK"),
+              child: const Text("OK"),
             )
           ],
         ),
@@ -108,18 +131,19 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// ✅ **Show Success Message**
   void _showSuccessMessage(String message) {
     showDialog(
       context: context,
       builder: (ctx) => BounceInDown(
-        duration: Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 500),
         child: AlertDialog(
-          title: Text("Success", style: TextStyle(color: Colors.green)),
+          title: const Text("Success", style: TextStyle(color: Colors.green)),
           content: Text(message),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text("OK"),
+              child: const Text("OK"),
             )
           ],
         ),
@@ -127,10 +151,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// ✅ **Toggle between Login & Register Mode**
   void _toggleMode() {
-    setState(() {
-      _isRegistering = !_isRegistering;
-    });
+    setState(() => _isRegistering = !_isRegistering);
   }
 
   @override
@@ -138,62 +161,67 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(_isRegistering ? 'Register' : 'Login')),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               FadeInDown(
-                duration: Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 500),
                 child: Text(
                   _isRegistering ? "Create Account" : "Welcome Back",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               if (_isRegistering) ...[
                 FadeInLeft(
-                  duration: Duration(milliseconds: 500),
+                  duration: const Duration(milliseconds: 500),
                   child: TextFormField(
                     controller: _nameController,
-                    decoration: InputDecoration(labelText: 'Name'),
-                    validator: (value) => value!.isEmpty ? 'Enter your name' : null,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    validator: (value) => value!.trim().isEmpty ? 'Enter your name' : null,
                   ),
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
               ],
               FadeInLeft(
-                duration: Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 500),
                 child: TextFormField(
                   controller: _phoneController,
-                  decoration: InputDecoration(labelText: 'Phone Number'),
+                  decoration: const InputDecoration(labelText: 'Phone Number'),
                   keyboardType: TextInputType.phone,
-                  validator: (value) => value!.isEmpty ? 'Enter your phone number' : null,
+                  validator: (value) => value!.trim().isEmpty ? 'Enter your phone number' : null,
                 ),
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
               FadeInRight(
-                duration: Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 500),
                 child: TextFormField(
                   controller: _passwordController,
-                  decoration: InputDecoration(labelText: 'Password'),
+                  decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
-                  validator: (value) => value!.isEmpty ? 'Enter your password' : null,
+                  validator: (value) => value!.trim().isEmpty ? 'Enter your password' : null,
                 ),
               ),
-              SizedBox(height: 24.0),
+              const SizedBox(height: 24.0),
               _isLoading
-                  ? CircularProgressIndicator()
+                  ? const CircularProgressIndicator()
                   : FadeInUp(
-                      duration: Duration(milliseconds: 500),
+                      duration: const Duration(milliseconds: 500),
                       child: Column(
                         children: [
                           ElevatedButton(
                             onPressed: _isRegistering ? _register : _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent,
+                              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                              textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
                             child: Text(_isRegistering ? 'Register' : 'Login'),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           TextButton(
                             onPressed: _toggleMode,
                             child: Text(

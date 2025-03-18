@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart'; // ✅ FIX: Added missing import for charts
+import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../services/weather_services.dart';
-import '../widgets/weather_chart.dart'; // ✅ Modularized chart widget
+import '../widgets/weather_chart.dart'; // ✅ Modularized Weather Graph
+import '../utils/helpers.dart'; // ✅ Import Helpers
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -13,8 +14,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class DashboardScreenState extends State<DashboardScreen> {
-  List<FlSpot> tempSpots = []; // ✅ FIX: FlSpot is correctly recognized
-  List<BarChartGroupData> rainBars = []; // ✅ FIX: BarChartGroupData is recognized
+  List<FlSpot> tempSpots = [];
+  List<BarChartGroupData> rainBars = [];
   List<String> forecastDates = [];
   Map<String, dynamic> currentWeather = {};
   bool isLoading = true;
@@ -27,37 +28,45 @@ class DashboardScreenState extends State<DashboardScreen> {
     _loadPreferences();
   }
 
-  /// **✅ Load location & theme settings from SharedPreferences**
+  /// **🔹 Load User Preferences (Location & Dark Mode)**
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      selectedLocation = prefs.getString('location') ?? "Machakos";
-      isDarkMode = prefs.getBool('isDarkMode') ?? false;
-    });
-    _fetchWeather(); // Fetch weather after loading preferences
+    if (mounted) {
+      setState(() {
+        selectedLocation = prefs.getString('location') ?? "Machakos";
+        isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      });
+    }
+    fetchWeather(); // ✅ Call the public method now
   }
 
-  Future<void> _fetchWeather() async {
+  /// **🔹 Public Method to Fetch Weather (Fixes the error)**
+  Future<void> fetchWeather() async { // ✅ Changed from `_fetchWeather()`
+    if (!mounted) return; // ✅ Prevents `BuildContext` issues
     setState(() => isLoading = true);
     await _fetchCurrentWeather();
     await _fetchForecast();
   }
 
+  /// **🔹 Fetch Current Weather**
   Future<void> _fetchCurrentWeather() async {
     try {
-      final todayFormatted = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      final data = await WeatherService.getWeather(todayFormatted, selectedLocation);
+      final formattedDate = formatApiDate(DateTime.now());
+      final data = await WeatherService.getWeather(formattedDate, selectedLocation);
 
-      setState(() {
-        currentWeather = data;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          currentWeather = data;
+          isLoading = false;
+        });
+      }
     } catch (e) {
-      debugPrint("Error fetching current weather: $e"); // ✅ FIX: Removed print()
-      setState(() => isLoading = false);
+      logMessage("Error fetching current weather: $e");
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
+  /// **🔹 Fetch 7-Day Forecast**
   Future<void> _fetchForecast() async {
     try {
       List<Map<String, dynamic>> weatherData = [];
@@ -65,8 +74,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
       for (int i = 0; i < 7; i++) {
         final date = DateTime.now().add(Duration(days: i));
-        final formattedDate = DateFormat('yyyy-MM-dd').format(date);
-        var data = await WeatherService.getWeather(formattedDate, selectedLocation);
+        var data = await WeatherService.getWeather(formatApiDate(date), selectedLocation);
 
         forecastDates.add(DateFormat('MM/dd').format(date));
         weatherData.add({
@@ -76,27 +84,29 @@ class DashboardScreenState extends State<DashboardScreen> {
         });
       }
 
-      setState(() {
-        tempSpots = weatherData
-            .map((entry) => FlSpot(entry["day"], entry["temperature"].toDouble()))
-            .toList(); // ✅ FIX: Correct FlSpot usage
+      if (mounted) {
+        setState(() {
+          tempSpots = weatherData
+              .map((entry) => FlSpot(entry["day"], entry["temperature"].toDouble()))
+              .toList();
 
-        rainBars = weatherData
-            .map((entry) => BarChartGroupData(
-                  x: entry["day"].toInt(),
-                  barRods: [
-                    BarChartRodData(
-                      toY: entry["rain"].toDouble(),
-                      width: 8,
-                      color: Colors.blueAccent,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ],
-                ))
-            .toList();
-      });
+          rainBars = weatherData
+              .map((entry) => BarChartGroupData(
+                    x: entry["day"].toInt(),
+                    barRods: [
+                      BarChartRodData(
+                        toY: entry["rain"].toDouble(),
+                        width: 8,
+                        color: Colors.blueAccent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ],
+                  ))
+              .toList();
+        });
+      }
     } catch (e) {
-      debugPrint("Error fetching forecast: $e"); // ✅ FIX: Removed print()
+      logMessage("Error fetching forecast: $e");
     }
   }
 
@@ -118,7 +128,9 @@ class DashboardScreenState extends State<DashboardScreen> {
             icon: const Icon(Icons.settings),
             onPressed: () async {
               await Navigator.pushNamed(context, '/settings');
-              _loadPreferences(); // ✅ Reload preferences when returning
+              if (mounted) {
+                _loadPreferences(); // ✅ Reload preferences when returning
+              }
             },
           ),
         ],

@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import '../utils/constants.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key, required Future<void> Function(bool value) setTheme});
+  final Future<void> Function(bool) setTheme; // ✅ Theme Toggle Function
+
+  const SettingsScreen({super.key, required this.setTheme});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String selectedLocation = "Machakos";
-  bool isCelsius = true;
-  bool isMillimeters = true;
-  bool enableNotifications = true;
-  bool enableExtremeAlerts = true;
-  bool isDarkMode = false;
+  String selectedLocation = defaultLocation; // ✅ Use default constant
+  bool isCelsius = defaultIsCelsius;
+  bool isMillimeters = defaultIsMillimeters;
+  bool enableNotifications = defaultEnableNotifications;
+  bool enableExtremeAlerts = defaultEnableExtremeAlerts;
+  bool isDarkMode = false; // ✅ Store theme preference
   final TextEditingController _searchController = TextEditingController();
 
   DateTime startDate = DateTime.now();
@@ -36,35 +39,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadPreferences();
   }
 
-  /// **✅ Load user preferences**
+  /// **🔹 Load Preferences**
   Future<void> _loadPreferences() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      selectedLocation = prefs.getString('location') ?? "Machakos";
-      isCelsius = prefs.getBool('isCelsius') ?? true;
-      isMillimeters = prefs.getBool('isMillimeters') ?? true;
-      enableNotifications = prefs.getBool('enableNotifications') ?? true;
-      enableExtremeAlerts = prefs.getBool('enableExtremeAlerts') ?? true;
-      isDarkMode = prefs.getBool('isDarkMode') ?? false;
-      startDate = DateTime.tryParse(prefs.getString('startDate') ?? '') ?? DateTime.now();
-      endDate = DateTime.tryParse(prefs.getString('endDate') ?? '') ?? DateTime.now().add(const Duration(days: 7));
+      selectedLocation = prefs.getString(prefKeyLocation) ?? defaultLocation;
+      isCelsius = prefs.getBool(prefKeyIsCelsius) ?? defaultIsCelsius;
+      isMillimeters = prefs.getBool(prefKeyIsMillimeters) ?? defaultIsMillimeters;
+      enableNotifications = prefs.getBool(prefKeyEnableNotifications) ?? defaultEnableNotifications;
+      enableExtremeAlerts = prefs.getBool(prefKeyEnableExtremeAlerts) ?? defaultEnableExtremeAlerts;
+      isDarkMode = prefs.getBool(prefKeyIsDarkMode) ?? false;
+      startDate = DateTime.tryParse(prefs.getString(prefKeyStartDate) ?? '') ?? DateTime.now();
+      endDate = DateTime.tryParse(prefs.getString(prefKeyEndDate) ?? '') ?? DateTime.now().add(const Duration(days: 7));
     });
   }
 
-  /// **✅ Save user preferences**
+  /// **🔹 Save Preferences**
   Future<void> _savePreferences() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('location', selectedLocation);
-    await prefs.setBool('isCelsius', isCelsius);
-    await prefs.setBool('isMillimeters', isMillimeters);
-    await prefs.setBool('enableNotifications', enableNotifications);
-    await prefs.setBool('enableExtremeAlerts', enableExtremeAlerts);
-    await prefs.setBool('isDarkMode', isDarkMode);
-    await prefs.setString('startDate', startDate.toIso8601String());
-    await prefs.setString('endDate', endDate.toIso8601String());
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(prefKeyLocation, selectedLocation);
+    await prefs.setBool(prefKeyIsCelsius, isCelsius);
+    await prefs.setBool(prefKeyIsMillimeters, isMillimeters);
+    await prefs.setBool(prefKeyEnableNotifications, enableNotifications);
+    await prefs.setBool(prefKeyEnableExtremeAlerts, enableExtremeAlerts);
+    await prefs.setBool(prefKeyIsDarkMode, isDarkMode);
+    await prefs.setString(prefKeyStartDate, startDate.toIso8601String());
+    await prefs.setString(prefKeyEndDate, endDate.toIso8601String());
   }
 
-  /// **✅ Select date range for forecast**
+  /// **🔹 Select Date Range**
   Future<void> _selectDateRange() async {
     final picked = await showDateRangePicker(
       context: context,
@@ -87,13 +90,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: primaryColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // **Location Search & Selection**
+            // **🔹 Location Selection**
             _buildSectionTitle("Preferred Location"),
             TextField(
               controller: _searchController,
@@ -126,97 +129,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 20),
 
-            // **Date Range Picker**
+            // **🔹 Date Range Picker**
             _buildSectionTitle("Select Forecast Date Range"),
             ListTile(
-              title: Text(
-                "From: ${DateFormat('yyyy-MM-dd').format(startDate)}",
-                style: const TextStyle(fontSize: 16),
-              ),
+              title: Text("From: ${DateFormat('yyyy-MM-dd').format(startDate)}"),
               trailing: const Icon(Icons.calendar_today),
               onTap: _selectDateRange,
             ),
             ListTile(
-              title: Text(
-                "To: ${DateFormat('yyyy-MM-dd').format(endDate)}",
-                style: const TextStyle(fontSize: 16),
-              ),
+              title: Text("To: ${DateFormat('yyyy-MM-dd').format(endDate)}"),
               trailing: const Icon(Icons.calendar_today),
               onTap: _selectDateRange,
             ),
 
             const SizedBox(height: 20),
 
-            // **Temperature Unit Toggle**
-            _buildSectionTitle("Temperature Unit"),
-            SwitchListTile(
-              title: const Text("Use Celsius (°C)"),
-              value: isCelsius,
-              onChanged: (value) {
-                setState(() => isCelsius = value);
-                _savePreferences();
-              },
-            ),
+            // **🔹 Temperature Unit Toggle**
+            _buildSwitchTile("Use Celsius (°C)", isCelsius, (value) {
+              setState(() => isCelsius = value);
+              _savePreferences();
+            }),
 
             const SizedBox(height: 20),
 
-            // **Rainfall Unit Toggle**
-            _buildSectionTitle("Rainfall Unit"),
-            SwitchListTile(
-              title: const Text("Use Millimeters (mm)"),
-              value: isMillimeters,
-              onChanged: (value) {
-                setState(() => isMillimeters = value);
-                _savePreferences();
-              },
-            ),
+            // **🔹 Rainfall Unit Toggle**
+            _buildSwitchTile("Use Millimeters (mm)", isMillimeters, (value) {
+              setState(() => isMillimeters = value);
+              _savePreferences();
+            }),
 
             const SizedBox(height: 20),
 
-            // **Notifications Toggle**
-            _buildSectionTitle("Notifications"),
-            SwitchListTile(
-              title: const Text("Enable Weather Updates"),
-              value: enableNotifications,
-              onChanged: (value) {
-                setState(() => enableNotifications = value);
-                _savePreferences();
-              },
-            ),
-            SwitchListTile(
-              title: const Text("Enable Extreme Weather Alerts"),
-              value: enableExtremeAlerts,
-              onChanged: (value) {
-                setState(() => enableExtremeAlerts = value);
-                _savePreferences();
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            // **Dark Mode Toggle**
-            _buildSectionTitle("Appearance"),
-            SwitchListTile(
-              title: const Text("Enable Dark Mode"),
-              value: isDarkMode,
-              onChanged: (value) {
-                setState(() => isDarkMode = value);
-                _savePreferences();
-              },
-            ),
+            // **🔹 Dark Mode Toggle**
+            _buildSwitchTile("Enable Dark Mode", isDarkMode, (value) {
+              setState(() => isDarkMode = value);
+              widget.setTheme(value); // ✅ Apply Theme Change
+              _savePreferences();
+            }),
 
             const SizedBox(height: 30),
 
-            // **Save Button**
+            // **🔹 Save Button**
             ElevatedButton(
-              onPressed: () {
-                _savePreferences();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Settings saved successfully!")),
-                );
-              },
+              onPressed: _savePreferences,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
+                backgroundColor: primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -228,14 +185,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// **Section Title Widget**
+  /// **🔹 Section Title Widget**
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54),
-      ),
+      child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54)),
     );
+  }
+
+  /// **🔹 Switch List Tile**
+  Widget _buildSwitchTile(String title, bool value, Function(bool) onChanged) {
+    return SwitchListTile(title: Text(title), value: value, onChanged: onChanged);
   }
 }

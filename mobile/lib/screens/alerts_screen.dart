@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/constants.dart'; // ✅ Import Constants
 
 class AlertsScreen extends StatefulWidget {
   const AlertsScreen({super.key});
 
   @override
-  _AlertsScreenState createState() => _AlertsScreenState();
+  AlertsScreenState createState() => AlertsScreenState();
 }
 
-class _AlertsScreenState extends State<AlertsScreen> {
+class AlertsScreenState extends State<AlertsScreen> {
   bool enableAlerts = true; // ✅ Toggle for notifications
 
   // ✅ Sample alerts (Replace this with API data)
@@ -28,25 +29,25 @@ class _AlertsScreenState extends State<AlertsScreen> {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      enableAlerts = prefs.getBool('enableAlerts') ?? true;
+      enableAlerts = prefs.getBool(prefKeyEnableAlerts) ?? true;
     });
   }
 
   /// **🔹 Save toggle state**
   Future<void> _savePreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('enableAlerts', enableAlerts);
+    await prefs.setBool(prefKeyEnableAlerts, enableAlerts);
   }
 
   /// **🔹 Get alert color based on severity**
   Color _getAlertColor(String severity) {
     switch (severity) {
       case "Extreme Heat":
-        return Colors.redAccent;
+        return alertHeatwaveColor;
       case "Flood Risk":
-        return Colors.blueAccent;
+        return alertFloodColor;
       case "Strong Winds":
-        return Colors.orangeAccent;
+        return alertStormColor;
       default:
         return Colors.grey;
     }
@@ -57,7 +58,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Weather Alerts', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: primaryColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -79,28 +80,35 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
             // **🚨 Alert List**
             Expanded(
-              child: ListView.builder(
-                itemCount: alerts.length,
-                itemBuilder: (context, index) {
-                  final alert = alerts[index];
-                  return Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    color: _getAlertColor(alert["severity"]!),
-                    child: ListTile(
-                      leading: const Icon(Icons.warning, color: Colors.white, size: 30),
-                      title: Text(
-                        "${alert["type"]} - ${alert["location"]}",
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                      subtitle: Text(
-                        "${alert["severity"]} | Date: ${alert["date"]}",
-                        style: const TextStyle(fontSize: 14, color: Colors.white70),
+              child: alerts.isNotEmpty
+                  ? ListView.builder(
+                      itemCount: alerts.length,
+                      itemBuilder: (context, index) {
+                        final alert = alerts[index];
+                        return Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          color: _getAlertColor(alert["severity"]!),
+                          child: ListTile(
+                            leading: const Icon(Icons.warning, color: Colors.white, size: 30),
+                            title: Text(
+                              "${alert["type"]} - ${alert["location"]}",
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                            subtitle: Text(
+                              "${alert["severity"]} | Date: ${alert["date"]}",
+                              style: const TextStyle(fontSize: 14, color: Colors.white70),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : const Center(
+                      child: Text(
+                        "No weather alerts at the moment",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                       ),
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),

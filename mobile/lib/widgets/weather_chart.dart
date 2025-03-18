@@ -19,31 +19,30 @@ class WeatherChart extends StatelessWidget {
       height: 300,
       child: Stack(
         children: [
-          // Rainfall Bar Chart
+          // **Rainfall Bar Chart**
           BarChart(
             BarChartData(
               barGroups: rainBars,
               gridData: FlGridData(show: false),
               borderData: FlBorderData(show: false),
               titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false), // Hide left Y-axis
-                ),
+                leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
                       int index = value.toInt();
                       return index < forecastDates.length
-                          ? Text(forecastDates[index], style: TextStyle(fontSize: 12))
-                          : Text("");
+                          ? Text(forecastDates[index], style: const TextStyle(fontSize: 12))
+                          : const Text("");
                     },
                   ),
                 ),
               ),
             ),
           ),
-          // Temperature Line Chart
+
+          // **Temperature Line Chart (Overlaying the Bars)**
           LineChart(
             LineChartData(
               lineBarsData: [
@@ -60,9 +59,7 @@ class WeatherChart extends StatelessWidget {
               gridData: FlGridData(show: false),
               borderData: FlBorderData(show: false),
               titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false), // Hide left Y-axis
-                ),
+                leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
             ),
           ),
