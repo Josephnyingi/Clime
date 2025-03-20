@@ -1,36 +1,64 @@
-# ClimeTetra
+# 🌦️ Anga - Smart Climate Insights for Farmers
 
-ClimeTetra is a project that uses weather data and machine learning models to provide accurate weather predictions. The goal is to support farmers and other stakeholders by predicting weather parameters such as temperature and rainfall, which can significantly impact agricultural practices.
+### **Accurate weather predictions powered by AI & Machine Learning to help farmers plan better.**
 
-The project includes a weather prediction API built with FastAPI, machine learning models for temperature and rainfall predictions, and historical data processing.
+---
 
-## Features
+## 🚀 Overview
 
-- **Weather Prediction API**: This service provides temperature and rainfall predictions based on historical data and machine learning models.
-- **Temperature Prediction Model**: A machine learning model for forecasting temperature using Prophet time series forecasting.
-- **Rainfall Prediction Model**: A machine learning model for forecasting rainfall.
-- **Data Processing**: Clean and preprocess historical weather data for model training.
-- **FastAPI**: High-performance API built using FastAPI framework.
-- **Scalable**: Can be extended to include more weather parameters and locations in the future.
+**Anga** is a weather forecasting platform that leverages **Machine Learning (ML) models** and **real-time data processing** to deliver **accurate climate insights for farmers and agricultural stakeholders**. 
 
-## Technologies Used  
+The system predicts weather parameters such as **temperature and rainfall** using **time-series forecasting models**, providing farmers with **actionable insights** to improve productivity.
 
-- **Python**: The core language for all model building, data processing, and API development.  
-- **FastAPI**: A modern web framework for building high-performance APIs with Python 3.7+.  
-- **Postman**: Used to test API endpoints.  
-- **Prophet**: A time series forecasting tool for weather prediction (temperature and rainfall).  
-- **Pandas**: A data manipulation library for preprocessing and analyzing weather data.  
-- **SQLite**: A lightweight database for storing user details (phone number, name, password) and weather predictions.  
-- **SQLAlchemy**: An ORM (Object Relational Mapper) for interacting with the SQLite database in Python.  
-- **Alembic**: Used for managing database migrations and schema updates.  
-- **Uvicorn**: An ASGI server to run the FastAPI app.  
-- **Pydantic**: Used for data validation in FastAPI to ensure correct data input.  
-- **Pickle**: A Python library for saving and loading trained models.  
-- **Google Colab Notebooks**: Used for model experimentation and data exploration.  
-- **GitHub**: Used for version control and project collaboration.  
-- **AWS EC2**: Deployed the API to AWS for cloud hosting.  
+The project consists of:
+- **Weather Forecasting API** (built with FastAPI & deployed on AWS).
+- **Machine Learning models** for **temperature & rainfall** predictions.
+- **Flutter-based mobile app** for **real-time access to weather forecasts**.
 
-## Contributors
-Joseph Nyingi
-## Mentor
-Alta Saunders
+---
+
+## ✨ Key Features
+✅ **AI-Powered Forecasts** – Uses **Prophet & time-series forecasting** models for accurate predictions.  
+✅ **Weather API** – Built with **FastAPI**, providing farmers with real-time weather updates.  
+✅ **Flutter Mobile App** – A user-friendly app for farmers to access **weather forecasts & alerts**.  
+✅ **Historical Weather Data Processing** – Cleans & preprocesses past data for **improved accuracy**.  
+✅ **Scalability** – Can extend support to **more locations, parameters & climate risk insights**.  
+✅ **Secure User Authentication** – Users **login/register** securely via **Flutter & FastAPI backend**.  
+✅ **Cloud Deployment** – The backend API is **hosted on AWS EC2** for global accessibility.  
+
+---
+
+## 🛠️ Technologies Used
+
+| **Category**           | **Technology**     |
+|------------------------|-------------------|
+| 🌐 **Frontend**        | Flutter (Dart)   |
+| 🖥️ **Backend API**     | FastAPI (Python) |
+| 🧠 **Machine Learning**| Prophet, Pandas, NumPy |
+| 📊 **Database**        | SQLite + SQLAlchemy |
+| ☁️ **Cloud Hosting**   | AWS EC2, Uvicorn |
+| 🔧 **Development**     | Python, Google Colab |
+| 🔄 **Version Control** | GitHub |
+
+---
+
+## 📱 Flutter Mobile App Features
+
+- 🌟 **Modern & Intuitive UI** – User-friendly interface for farmers.
+- 📊 **Real-time Weather Data** – Displays **current weather & forecasts**.
+- 🌍 **Location-Based Forecasts** – Provides **local** & **regional** climate insights.
+- 🚨 **Weather Alerts** – Sends **push notifications** for extreme weather conditions.
+- 🔑 **Secure Login & Registration** – Ensures **data privacy & user authentication**.
+
+📌 **The Flutter app fetches weather data from the FastAPI backend and presents it in an intuitive way.**
+
+---
+
+## 🔧 Installation & Setup
+
+### 🔹 Backend (FastAPI) Setup
+
+1️⃣ Clone this repository:
+```sh
+git clone https://github.com/yourusername/clime.git
+cd clime
