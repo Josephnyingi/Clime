@@ -146,7 +146,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                     Card(
                       elevation: 6,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withAlpha((0.9 * 255).toInt()), // ✅ Fixed `.withOpacity()`
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(

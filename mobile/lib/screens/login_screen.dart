@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:animate_do/animate_do.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/constants.dart';
-import '../utils/helpers.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,13 +11,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class LoginScreenState extends State<LoginScreen> {
+  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
   bool _isLoading = false;
   bool _isRegistering = false;
   bool _rememberMe = false;
-  bool _obscurePassword = true; // 👁 Password visibility toggle
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -33,59 +32,58 @@ class LoginScreenState extends State<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     bool isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
     if (isLoggedIn) {
-      Future.delayed(Duration.zero, () {
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      });
+      Navigator.pushReplacementNamed(context, '/dashboard');
     }
   }
 
-  /// ✅ **Login User**
-  Future<void> _login() async {
+  /// ✅ **Handle Login**
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    final Uri url = Uri.parse("$API_BASE_URL/login/");
     final String phone = _phoneController.text.trim();
     final String password = _passwordController.text.trim();
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"phone_number": phone, "password": password}),
-      );
-
-      if (response.statusCode == 200) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool("isLoggedIn", true);
-        await prefs.setString("phone_number", phone);
-        if (_rememberMe) {
-          await prefs.setBool("rememberMe", true);
-        }
-
-        _showSuccessMessage("Login successful! Redirecting...");
-        await Future.delayed(const Duration(seconds: 1));
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      } else {
-        final responseData = jsonDecode(response.body);
-        _showErrorMessage(responseData['detail']);
-      }
-    } catch (error) {
-      logMessage("Login failed: $error");
-      _showErrorMessage("Failed to connect to the server.");
-    }
+    final result = await _authService.login(phone, password);
 
     setState(() => _isLoading = false);
+
+    if (result['success']) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool("isLoggedIn", true);
+      await prefs.setString("phone_number", phone);
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    } else {
+      _showMessage("Error", result['message'], Colors.red);
+    }
   }
 
-  /// ✅ **Show Error Message**
-  void _showErrorMessage(String message) {
+  /// ✅ **Handle Register**
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+
+    final String phone = _phoneController.text.trim();
+    final String password = _passwordController.text.trim();
+    final result = await _authService.register("User", phone, password);
+
+    setState(() => _isLoading = false);
+
+    if (result['success']) {
+      _showMessage("Success", result['message'], Colors.green);
+      _toggleMode();
+    } else {
+      _showMessage("Error", result['message'], Colors.red);
+    }
+  }
+
+  /// ✅ **Show Message Dialog**
+  void _showMessage(String title, String message, Color color) {
     showDialog(
       context: context,
       builder: (ctx) => BounceInDown(
         duration: const Duration(milliseconds: 500),
         child: AlertDialog(
-          title: const Text("Error", style: TextStyle(color: Colors.red)),
+          title: Text(title, style: TextStyle(color: color)),
           content: Text(message),
           actions: [
             TextButton(
@@ -98,49 +96,9 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// ✅ **Show Success Message**
-  void _showSuccessMessage(String message) {
-    showDialog(
-      context: context,
-      builder: (ctx) => BounceInDown(
-        duration: const Duration(milliseconds: 500),
-        child: AlertDialog(
-          title: const Text("Success", style: TextStyle(color: Colors.green)),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text("OK"),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// ✅ **Toggle Login/Register Mode**
+  /// ✅ **Toggle Between Login/Register Mode**
   void _toggleMode() {
     setState(() => _isRegistering = !_isRegistering);
-  }
-
-  /// ✅ **Handle Forgot Password**
-  void _forgotPassword() {
-    showDialog(
-      context: context,
-      builder: (ctx) => BounceInDown(
-        duration: const Duration(milliseconds: 500),
-        child: AlertDialog(
-          title: const Text("Reset Password"),
-          content: const Text("Contact support to reset your password."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text("OK"),
-            )
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -184,7 +142,7 @@ class LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 25),
 
-              // ✅ **Login Form**
+              // ✅ **Login/Register Form**
               Form(
                 key: _formKey,
                 child: Column(
@@ -230,22 +188,23 @@ class LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                         TextButton(
-                          onPressed: _forgotPassword,
+                          onPressed: () => _showMessage("Forgot Password", "Contact support to reset your password.", Colors.blue),
                           child: const Text("Forgot Password?", style: TextStyle(color: Colors.blueAccent)),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20),
 
+                    // ✅ **Login/Register Button**
                     _isLoading
                         ? const CircularProgressIndicator()
                         : ElevatedButton(
-                            onPressed: _login,
+                            onPressed: _isRegistering ? _handleRegister : _handleLogin,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blueAccent,
                               padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                             ),
-                            child: const Text("Login"),
+                            child: Text(_isRegistering ? "Register" : "Login"),
                           ),
                     const SizedBox(height: 10),
 
@@ -264,4 +223,3 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
