@@ -3,8 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../services/weather_services.dart';
-import '../widgets/weather_chart.dart'; // ✅ Modularized Weather Graph
-import '../utils/helpers.dart'; // ✅ Import Helpers
+import '../utils/helpers.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,6 +20,8 @@ class DashboardScreenState extends State<DashboardScreen> {
   bool isLoading = true;
   bool isDarkMode = false;
   String selectedLocation = "Machakos";
+  DateTime? startDate;
+  DateTime? endDate;
 
   @override
   void initState() {
@@ -28,21 +29,23 @@ class DashboardScreenState extends State<DashboardScreen> {
     _loadPreferences();
   }
 
-  /// **🔹 Load User Preferences (Location & Dark Mode)**
+  /// **🔹 Load User Preferences (Location, Theme, Date Range)**
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
         selectedLocation = prefs.getString('location') ?? "Machakos";
         isDarkMode = prefs.getBool('isDarkMode') ?? false;
+        startDate = DateTime.tryParse(prefs.getString('startDate') ?? '') ?? DateTime.now().subtract(const Duration(days: 6));
+        endDate = DateTime.tryParse(prefs.getString('endDate') ?? '') ?? DateTime.now();
       });
     }
-    fetchWeather(); // ✅ Call the public method now
+    fetchWeather();
   }
 
-  /// **🔹 Public Method to Fetch Weather (Fixes the error)**
-  Future<void> fetchWeather() async { // ✅ Changed from `_fetchWeather()`
-    if (!mounted) return; // ✅ Prevents `BuildContext` issues
+  /// **🔹 Fetch Weather Data**
+  Future<void> fetchWeather() async {
+    if (!mounted) return;
     setState(() => isLoading = true);
     await _fetchCurrentWeather();
     await _fetchForecast();
@@ -57,28 +60,25 @@ class DashboardScreenState extends State<DashboardScreen> {
       if (mounted) {
         setState(() {
           currentWeather = data;
-          isLoading = false;
         });
       }
     } catch (e) {
       logMessage("Error fetching current weather: $e");
-      if (mounted) setState(() => isLoading = false);
     }
   }
 
-  /// **🔹 Fetch 7-Day Forecast**
+  /// **🔹 Fetch Forecast Data Based on Selected Date Range**
   Future<void> _fetchForecast() async {
     try {
       List<Map<String, dynamic>> weatherData = [];
       forecastDates.clear();
 
-      for (int i = 0; i < 7; i++) {
-        final date = DateTime.now().add(Duration(days: i));
+      for (DateTime date = startDate!; date.isBefore(endDate!.add(const Duration(days: 1))); date = date.add(const Duration(days: 1))) {
         var data = await WeatherService.getWeather(formatApiDate(date), selectedLocation);
 
-        forecastDates.add(DateFormat('MM/dd').format(date));
+        forecastDates.add(DateFormat('dd').format(date)); // Only show day
         weatherData.add({
-          "day": i.toDouble(),
+          "day": date.day.toDouble(),
           "temperature": data['temperature_prediction'],
           "rain": data['rain_prediction'],
         });
@@ -96,9 +96,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                     barRods: [
                       BarChartRodData(
                         toY: entry["rain"].toDouble(),
-                        width: 8,
-                        color: Colors.blueAccent,
-                        borderRadius: BorderRadius.circular(6),
+                        width: 10,
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ],
                   ))
@@ -108,81 +108,147 @@ class DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       logMessage("Error fetching forecast: $e");
     }
+    setState(() => isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       appBar: AppBar(
         title: Text(
           'Weather Dashboard',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isDarkMode ? Colors.white : Colors.black,
+            color: isDarkMode ? Colors.orangeAccent : Colors.black,
           ),
         ),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: isDarkMode ? Colors.black : Colors.blueAccent,
         elevation: 5,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () async {
-              await Navigator.pushNamed(context, '/settings');
-              if (mounted) {
-                _loadPreferences(); // ✅ Reload preferences when returning
-              }
-            },
+            icon: const Icon(Icons.refresh),
+            onPressed: fetchWeather,
           ),
         ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  children: [
-                    // ✅ **Current Weather Section**
-                    Card(
-                      elevation: 6,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      color: Colors.white.withAlpha((0.9 * 255).toInt()), // ✅ Fixed `.withOpacity()`
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              "Current Weather in $selectedLocation",
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: isDarkMode ? Colors.white : Colors.black87,
-                              ),
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: [
+                  // ✅ **Current Weather Section**
+                  Card(
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    color: isDarkMode ? Colors.black87 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Current Weather in $selectedLocation",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: isDarkMode ? Colors.white : Colors.black87,
                             ),
-                            const SizedBox(height: 10),
-                            Text(
-                              "Temperature: ${currentWeather['temperature_prediction']}°C",
-                              style: const TextStyle(fontSize: 18, color: Colors.redAccent),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Temperature: ${currentWeather['temperature_prediction']}°C",
+                            style: const TextStyle(fontSize: 18, color: Colors.redAccent),
+                          ),
+                          Text(
+                            "Rainfall: ${currentWeather['rain_prediction']} mm",
+                            style: const TextStyle(fontSize: 18, color: Colors.blueAccent),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ✅ **Temperature Line Chart**
+                  Text(
+                    "Temperature Forecast",
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.orangeAccent : Colors.blueAccent,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 250,
+                    child: LineChart(
+                      LineChartData(
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: tempSpots,
+                            isCurved: true,
+                            color: Colors.redAccent,
+                            barWidth: 2.5,
+                            belowBarData: BarAreaData(show: false),
+                            dotData: FlDotData(show: true),
+                          ),
+                        ],
+                        titlesData: FlTitlesData(
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false), // Hides left axis
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 20,
+                              interval: 1, // Ensures only whole numbers (days)
+                              getTitlesWidget: (value, meta) {
+                                return Text(value.toInt().toString()); // Converts to whole number
+                              },
                             ),
-                            Text(
-                              "Rainfall: ${currentWeather['rain_prediction']} mm",
-                              style: const TextStyle(fontSize: 18, color: Colors.blueAccent),
-                            ),
-                          ],
+                          ),
+                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)), // Hides top X axis
                         ),
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 15),
+                  const SizedBox(height: 30),
 
-                    // ✅ **Weather Graph**
-                    WeatherChart(
-                      tempSpots: tempSpots,
-                      rainBars: rainBars,
-                      forecastDates: forecastDates,
+                  // ✅ **Rainfall Bar Chart**
+                  Text(
+                    "Rainfall Forecast",
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.orangeAccent : Colors.blueAccent,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 250,
+                    child: BarChart(
+                      BarChartData(
+                        barGroups: rainBars,
+                        titlesData: FlTitlesData(
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false), // Hides left axis
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 20,
+                              interval: 1, // Ensures whole numbers for days
+                            ),
+                          ),
+                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)), // Hides top X axis
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
     );
