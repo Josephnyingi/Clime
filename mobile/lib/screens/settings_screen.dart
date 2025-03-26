@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../utils/constants.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final Future<void> Function(bool) setTheme; // ✅ Theme Toggle Function
+  final Future<void> Function(bool) setTheme;
 
   const SettingsScreen({super.key, required this.setTheme});
 
@@ -13,24 +13,20 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String selectedLocation = defaultLocation; // ✅ Use default constant
+  String selectedLocation = defaultLocation;
   bool isCelsius = defaultIsCelsius;
   bool isMillimeters = defaultIsMillimeters;
   bool enableNotifications = defaultEnableNotifications;
   bool enableExtremeAlerts = defaultEnableExtremeAlerts;
-  bool isDarkMode = false; // ✅ Store theme preference
+  bool isDarkMode = false;
+
   final TextEditingController _searchController = TextEditingController();
 
   DateTime startDate = DateTime.now();
   DateTime endDate = DateTime.now().add(const Duration(days: 7));
 
   final List<String> locations = [
-    "Machakos", "Nairobi", "Mombasa", "Kisumu", "Eldoret", "Nakuru",
-    "Thika", "Nyeri", "Meru", "Kericho", "Embu", "Kakamega", "Kitale",
-    "Johannesburg", "Pretoria", "Durban", "Cape Town", "Pietermaritzburg",
-    "Nelspruit", "Bloemfontein", "Polokwane", "Mthatha", "Kimberley",
-    "Upington", "George", "East London", "Queenstown", "Stellenbosch",
-    "Vryburg", "Grahamstown", "Ladysmith", "Middelburg", "Newcastle"
+    "Machakos", // 👈 Only valid location for now
   ];
 
   @override
@@ -39,11 +35,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadPreferences();
   }
 
-  /// **🔹 Load Preferences**
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
+    String storedLocation = prefs.getString(prefKeyLocation) ?? defaultLocation;
+
     setState(() {
-      selectedLocation = prefs.getString(prefKeyLocation) ?? defaultLocation;
+      selectedLocation = locations.contains(storedLocation) ? storedLocation : defaultLocation;
       isCelsius = prefs.getBool(prefKeyIsCelsius) ?? defaultIsCelsius;
       isMillimeters = prefs.getBool(prefKeyIsMillimeters) ?? defaultIsMillimeters;
       enableNotifications = prefs.getBool(prefKeyEnableNotifications) ?? defaultEnableNotifications;
@@ -54,7 +51,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  /// **🔹 Save Preferences**
   Future<void> _savePreferences() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(prefKeyLocation, selectedLocation);
@@ -67,7 +63,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setString(prefKeyEndDate, endDate.toIso8601String());
   }
 
-  /// **🔹 Select Date Range**
   Future<void> _selectDateRange() async {
     final picked = await showDateRangePicker(
       context: context,
@@ -96,18 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // **🔹 Location Selection**
             _buildSectionTitle("Preferred Location"),
-            TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: "Search location...",
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: (value) => setState(() {}),
-            ),
-            const SizedBox(height: 10),
             DropdownButton<String>(
               value: selectedLocation,
               isExpanded: true,
@@ -117,9 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 });
                 _savePreferences();
               },
-              items: locations
-                  .where((loc) => loc.toLowerCase().contains(_searchController.text.toLowerCase()))
-                  .map((location) {
+              items: locations.map((location) {
                 return DropdownMenuItem(
                   value: location,
                   child: Text(location),
@@ -129,7 +111,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 20),
 
-            // **🔹 Date Range Picker**
             _buildSectionTitle("Select Forecast Date Range"),
             ListTile(
               title: Text("From: ${DateFormat('yyyy-MM-dd').format(startDate)}"),
@@ -144,7 +125,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 20),
 
-            // **🔹 Temperature Unit Toggle**
             _buildSwitchTile("Use Celsius (°C)", isCelsius, (value) {
               setState(() => isCelsius = value);
               _savePreferences();
@@ -152,7 +132,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 20),
 
-            // **🔹 Rainfall Unit Toggle**
             _buildSwitchTile("Use Millimeters (mm)", isMillimeters, (value) {
               setState(() => isMillimeters = value);
               _savePreferences();
@@ -160,16 +139,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 20),
 
-            // **🔹 Dark Mode Toggle**
             _buildSwitchTile("Enable Dark Mode", isDarkMode, (value) {
               setState(() => isDarkMode = value);
-              widget.setTheme(value); // ✅ Apply Theme Change
+              widget.setTheme(value);
               _savePreferences();
             }),
 
             const SizedBox(height: 30),
 
-            // **🔹 Save Button**
             ElevatedButton(
               onPressed: _savePreferences,
               style: ElevatedButton.styleFrom(
@@ -185,16 +162,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// **🔹 Section Title Widget**
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54)),
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54),
+      ),
     );
   }
 
-  /// **🔹 Switch List Tile**
   Widget _buildSwitchTile(String title, bool value, Function(bool) onChanged) {
-    return SwitchListTile(title: Text(title), value: value, onChanged: onChanged);
+    return SwitchListTile(
+      title: Text(title),
+      value: value,
+      onChanged: onChanged,
+    );
   }
 }
