@@ -121,6 +121,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
