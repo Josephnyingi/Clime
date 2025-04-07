@@ -186,7 +186,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                             isCurved: true,
                             color: Colors.redAccent,
                             barWidth: 2.5,
-                            dotData: FlDotData(show: true),
+                            dotData: FlDotData(show: false),
                           ),
                         ],
                         titlesData: FlTitlesData(

@@ -127,13 +127,13 @@ class LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   children: const [
                     Text(
-                      "🌍 Anga - AI-Powered Climate Insights",
+                      "🌍 Anga - AI-Powered Climate Forecasts",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
                     ),
                     SizedBox(height: 5),
                     Text(
-                      "Accurate AI-driven weather forecasts to help farmers make smarter decisions and increase yields.",
+                      "Accurate AI-driven weather forecasts to help African farmers make smarter decisions and increase yields.",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
