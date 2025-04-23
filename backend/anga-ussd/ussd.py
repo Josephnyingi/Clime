@@ -31,19 +31,20 @@ def ussd_callback():
             if location_index not in range(len(ALLOWED_LOCATIONS)):
                 response = "END ❌ Invalid location selection."
             else:
-                response = "CON Forecast range:\n1. 1 week\n2. 2 weeks\n3. Enter date range"
+                response = "CON Forecast range:\n1. 1 day\n2. 3 days\n3. 1 week\n4. 2 weeks\n5. Enter date range"
         except ValueError:
             response = "END ❌ Please enter a valid location number."
 
     elif len(inputs) == 3:
         try:
             range_option = int(inputs[2])
-            if range_option in [1, 2]:
+            if range_option in [1, 2, 3, 4]:
                 location = ALLOWED_LOCATIONS[int(inputs[1]) - 1]
+                days_map = {1: 1, 2: 3, 3: 7, 4: 14}
                 start = datetime.today()
-                end = start + timedelta(days=7 if range_option == 1 else 14)
+                end = start + timedelta(days=days_map[range_option])
                 return generate_forecast_response(location, start, end)
-            elif range_option == 3:
+            elif range_option == 5:
                 response = "CON Enter start date (YYYY-MM-DD):"
             else:
                 response = "END ❌ Invalid range option."
@@ -119,3 +120,4 @@ def generate_forecast_response(location, start, end):
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
