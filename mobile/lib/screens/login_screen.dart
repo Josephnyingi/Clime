@@ -9,7 +9,6 @@ class LoginScreen extends StatefulWidget {
   @override
   LoginScreenState createState() => LoginScreenState();
 }
-
 class LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
