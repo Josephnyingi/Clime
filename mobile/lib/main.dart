@@ -4,7 +4,7 @@ import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/live_weather_screen.dart'; // ✅ Live Weather
+import 'screens/live_weather_screen.dart'; // ✅ Import LiveWeatherScreen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,9 +36,11 @@ class AngaAppState extends State<AngaApp> {
 
   Future<void> _setTheme(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      isDarkMode = value;
-    });
+    if (mounted) {
+      setState(() {
+        isDarkMode = value;
+      });
+    }
     await prefs.setBool('isDarkMode', value);
   }
 
@@ -56,7 +58,7 @@ class AngaAppState extends State<AngaApp> {
         '/dashboard': (context) => MainScreen(setTheme: _setTheme),
         '/alerts': (context) => const AlertsScreen(),
         '/settings': (context) => SettingsScreen(setTheme: _setTheme),
-        '/live': (context) => const LiveWeatherScreen(), // ✅ New route
+        '/live_weather': (context) => const LiveWeatherScreen(), // ✅ Live weather route
       },
     );
   }
@@ -73,8 +75,9 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  late final List<Widget> _screens;
   final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey();
+
+  late final List<Widget> _screens;
 
   @override
   void initState() {
@@ -87,7 +90,11 @@ class MainScreenState extends State<MainScreen> {
   }
 
   void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
+    if (index != _selectedIndex) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
 
   Future<void> _logout() async {
@@ -102,7 +109,10 @@ class MainScreenState extends State<MainScreen> {
     if (_selectedIndex == 0) {
       _dashboardKey.currentState?.fetchWeather();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Weather data refreshed!")),
+        const SnackBar(
+          content: Text("Weather data refreshed!"),
+          duration: Duration(seconds: 2),
+        ),
       );
     }
   }
@@ -110,26 +120,40 @@ class MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("ANGA Weather"),
+        backgroundColor: Colors.blueAccent,
+      ),
       drawer: Drawer(
-        backgroundColor: Colors.blueGrey.shade900,
         child: ListView(
-          padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Colors.blueAccent),
-              child: const Text("ANGA Menu", style: TextStyle(color: Colors.white, fontSize: 22)),
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blueAccent),
+              child: Text('ANGA Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
             ),
             ListTile(
-              leading: const Icon(Icons.cloud, color: Colors.white),
-              title: const Text("Live Weather", style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-                Navigator.pushNamed(context, '/live');
-              },
+              leading: const Icon(Icons.dashboard),
+              title: const Text('Dashboard'),
+              onTap: () => Navigator.pushReplacementNamed(context, '/dashboard'),
             ),
             ListTile(
-              leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text("Logout", style: TextStyle(color: Colors.redAccent)),
+              leading: const Icon(Icons.cloud),
+              title: const Text('Live Weather'),
+              onTap: () => Navigator.pushNamed(context, '/live_weather'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.warning),
+              title: const Text('Alerts'),
+              onTap: () => Navigator.pushReplacementNamed(context, '/alerts'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () => Navigator.pushReplacementNamed(context, '/settings'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
               onTap: _logout,
             ),
           ],

@@ -125,8 +125,9 @@ def get_live_weather(location: str = "machakos"):
         return {
             "location": loc.title(),
             "date": data["daily"]["time"][0],
-            "temperature_max": f"{data['daily']['temperature_2m_max'][0]} °C",
-            "rain_sum": f"{data['daily']['precipitation_sum'][0]} mm"
+            "temperature_max": data["daily"]["temperature_2m_max"][0],
+            "rain_sum": data["daily"]["precipitation_sum"][0]
+
         }
     except Exception as e:
         return {"error": "Failed to fetch live weather", "details": str(e)}

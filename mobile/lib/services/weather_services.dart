@@ -28,4 +28,6 @@ class WeatherService {
       return {"temperature_prediction": -999, "rain_prediction": -999}; // ✅ Default error values
     }
   }
+
+  static getLiveWeather(String selectedLocation) {}
 }
