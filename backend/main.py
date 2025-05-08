@@ -21,7 +21,7 @@ try:
 except FileNotFoundError:
     raise RuntimeError("Model files not found!")
 
-# DB session dependency
+# Database dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -29,13 +29,23 @@ def get_db():
     finally:
         db.close()
 
+# ✅ Default supported locations
+SUPPORTED_LOCATIONS = {
+    "machakos": {"lat": -1.5167, "lon": 37.2667},
+    "vhembe": {"lat": -22.9781, "lon": 30.4516}
+}
+
 # PREDICTION ENDPOINT
 class PredictionRequest(BaseModel):
     date: str
-    location: str
+    location: str = "machakos"  # ✅ Default location
 
 @app.post("/predict/")
 async def predict_weather(request: PredictionRequest):
+    location = request.location.lower()
+    if location not in SUPPORTED_LOCATIONS:
+        raise HTTPException(status_code=400, detail="Unsupported location. Use 'machakos' or 'vhembe'.")
+
     try:
         date = pd.to_datetime(request.date)
     except Exception:
@@ -47,12 +57,12 @@ async def predict_weather(request: PredictionRequest):
 
     return {
         "date": request.date,
-        "location": request.location,
+        "location": location.title(),
         "temperature_prediction": round(temp_prediction, 2),
         "rain_prediction": round(rain_prediction, 2)
     }
 
-# SAVE TO DB ENDPOINT
+# SAVE PREDICTION
 @app.post("/save_prediction/")
 def save_prediction(date: str, location: str, temperature: float, rain: float, db: Session = Depends(get_db)):
     new_weather = WeatherData(date=date, location=location, temperature=temperature, rain=rain)
@@ -77,7 +87,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return {"message": "User created successfully", "user_id": new_user.id}
 
-# USER LOGIN
+# LOGIN
 class LoginRequest(BaseModel):
     phone_number: str
     password: str
@@ -89,19 +99,14 @@ def login_user(request: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid phone number or password")
     return {"message": "Login successful", "user_id": user.id}
 
-# ✅ LIVE WEATHER ENDPOINT
-location_coords = {
-    "machakos": {"lat": -1.5167, "lon": 37.2667},
-    "kakamega": {"lat": 0.2827, "lon": 34.7519}
-}
-
+# ✅ LIVE WEATHER ENDPOINT (Machakos and Vhembe only)
 @app.get("/live_weather/")
 def get_live_weather(location: str = "machakos"):
     loc = location.lower()
-    if loc not in location_coords:
-        return {"error": "Only 'machakos' and 'kakamega' are supported."}
+    if loc not in SUPPORTED_LOCATIONS:
+        return {"error": "Only 'machakos' and 'vhembe' are supported."}
 
-    coords = location_coords[loc]
+    coords = SUPPORTED_LOCATIONS[loc]
     today = datetime.now().strftime('%Y-%m-%d')
 
     url = (
@@ -120,8 +125,8 @@ def get_live_weather(location: str = "machakos"):
         return {
             "location": loc.title(),
             "date": data["daily"]["time"][0],
-            "temperature_max": f"{data["daily"]["temperature_2m_max"][0]} °C",
-            "rain_sum": f"{data["daily"]["precipitation_sum"][0]} mm"
+            "temperature_max": f"{data['daily']['temperature_2m_max'][0]} °C",
+            "rain_sum": f"{data['daily']['precipitation_sum'][0]} mm"
         }
     except Exception as e:
         return {"error": "Failed to fetch live weather", "details": str(e)}
