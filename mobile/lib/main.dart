@@ -1,9 +1,11 @@
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/live_weather_screen.dart'; // ✅ Import LiveWeatherScreen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +35,6 @@ class AngaAppState extends State<AngaApp> {
     isDarkMode = widget.initialTheme;
   }
 
-  /// ✅ **Toggle Theme and Save to SharedPreferences**
   Future<void> _setTheme(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
@@ -58,6 +59,7 @@ class AngaAppState extends State<AngaApp> {
         '/dashboard': (context) => MainScreen(setTheme: _setTheme),
         '/alerts': (context) => const AlertsScreen(),
         '/settings': (context) => SettingsScreen(setTheme: _setTheme),
+        '/live_weather': (context) => const LiveWeatherScreen(), // ✅ New route
       },
     );
   }
@@ -74,14 +76,15 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey();
+
   late final List<Widget> _screens;
-  final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey(); // ✅ Fix: Key for Dashboard Refresh
 
   @override
   void initState() {
     super.initState();
     _screens = [
-      DashboardScreen(key: _dashboardKey), // ✅ Assign Key for Refreshing
+      DashboardScreen(key: _dashboardKey),
       const AlertsScreen(),
       SettingsScreen(setTheme: widget.setTheme),
     ];
@@ -95,19 +98,17 @@ class MainScreenState extends State<MainScreen> {
     }
   }
 
-  /// ✅ **Logout Function (Clears Session & Navigates to Login)**
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', false); // ✅ Mark as logged out
+    await prefs.setBool('isLoggedIn', false);
     if (mounted) {
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
     }
   }
 
-  /// ✅ **Refresh Function (Fetches Updated Weather Data)**
   void _fetchWeatherUpdate() {
     if (_selectedIndex == 0) {
-      _dashboardKey.currentState?.fetchWeather(); // ✅ Calls `fetchWeather()` in Dashboard
+      _dashboardKey.currentState?.fetchWeather();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Weather data refreshed!"),
@@ -120,10 +121,46 @@ class MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
+      appBar: AppBar(
+        title: const Text("ANGA Weather"),
+        backgroundColor: Colors.blueAccent,
       ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blueAccent),
+              child: Text('ANGA Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.dashboard),
+              title: const Text('Dashboard'),
+              onTap: () => Navigator.pushReplacementNamed(context, '/dashboard'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.cloud),
+              title: const Text('Live Weather'),
+              onTap: () => Navigator.pushNamed(context, '/live_weather'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.warning),
+              title: const Text('Alerts'),
+              onTap: () => Navigator.pushReplacementNamed(context, '/alerts'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () => Navigator.pushReplacementNamed(context, '/settings'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: _logout,
+            ),
+          ],
+        ),
+      ),
+      body: IndexedStack(index: _selectedIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blueAccent,
@@ -131,33 +168,22 @@ class MainScreenState extends State<MainScreen> {
         showUnselectedLabels: true,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: "Dashboard",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.warning),
-            label: "Alerts",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Settings",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
+          BottomNavigationBarItem(icon: Icon(Icons.warning), label: "Alerts"),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
         ],
       ),
-
-      /// ✅ **Floating Action Buttons (Refresh & Logout)**
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            onPressed: _fetchWeatherUpdate, // ✅ Calls Refresh Function
+            onPressed: _fetchWeatherUpdate,
             backgroundColor: Colors.blueAccent,
             child: const Icon(Icons.refresh, size: 28),
           ),
           const SizedBox(width: 10),
           FloatingActionButton(
-            onPressed: _logout, // ✅ Logout Button
+            onPressed: _logout,
             backgroundColor: Colors.redAccent,
             child: const Icon(Icons.logout, size: 28),
           ),

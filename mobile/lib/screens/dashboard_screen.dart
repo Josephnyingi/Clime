@@ -4,21 +4,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../services/weather_services.dart';
 import '../utils/helpers.dart';
-
+import 'live_weather_screen.dart'; // ✅ Import the live weather screen
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
-
 
   @override
   DashboardScreenState createState() => DashboardScreenState();
 }
 
-
 class DashboardScreenState extends State<DashboardScreen> {
   List<FlSpot> tempSpots = [];
   List<BarChartGroupData> rainBars = [];
-  List<String> forecastDates = []; // Holds formatted dates like "10/3"
+  List<String> forecastDates = [];
   Map<String, dynamic> currentWeather = {};
   bool isLoading = true;
   bool isDarkMode = false;
@@ -26,19 +24,16 @@ class DashboardScreenState extends State<DashboardScreen> {
   DateTime? startDate;
   DateTime? endDate;
 
-
   @override
   void initState() {
     super.initState();
     _loadPreferences();
   }
 
-
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final storedStart = prefs.getString('startDate');
     final storedEnd = prefs.getString('endDate');
-
 
     setState(() {
       selectedLocation = prefs.getString('location') ?? "Machakos";
@@ -47,10 +42,8 @@ class DashboardScreenState extends State<DashboardScreen> {
       endDate = storedEnd != null ? DateTime.tryParse(storedEnd) : DateTime.now();
     });
 
-
     fetchWeather();
   }
-
 
   Future<void> fetchWeather() async {
     if (!mounted) return;
@@ -58,7 +51,6 @@ class DashboardScreenState extends State<DashboardScreen> {
     await _fetchCurrentWeather();
     await _fetchForecast();
   }
-
 
   Future<void> _fetchCurrentWeather() async {
     try {
@@ -72,12 +64,10 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-
   Future<void> _fetchForecast() async {
     try {
       List<Map<String, dynamic>> weatherData = [];
       forecastDates.clear();
-
 
       for (DateTime date = startDate!;
           date.isBefore(endDate!.add(const Duration(days: 1)));
@@ -85,19 +75,17 @@ class DashboardScreenState extends State<DashboardScreen> {
         final data = await WeatherService.getWeather(formatApiDate(date), selectedLocation);
         forecastDates.add(DateFormat('d/M').format(date));
         weatherData.add({
-          "day": weatherData.length.toDouble(), // index-based day
+          "day": weatherData.length.toDouble(),
           "temperature": data['temperature_prediction'],
           "rain": data['rain_prediction'],
         });
       }
-
 
       if (mounted) {
         setState(() {
           tempSpots = weatherData
               .map((e) => FlSpot(e["day"], e["temperature"]))
               .toList();
-
 
           rainBars = weatherData
               .map((e) => BarChartGroupData(
@@ -119,7 +107,6 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
     setState(() => isLoading = false);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -170,9 +157,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
 
-
                   const SizedBox(height: 20),
-
 
                   Text("Temperature Forecast", style: TextStyle(color: Colors.blueAccent, fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
@@ -212,9 +197,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
 
-
                   const SizedBox(height: 30),
-
 
                   Text("Rainfall Forecast", style: TextStyle(color: Colors.blueAccent, fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
@@ -245,11 +228,27 @@ class DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 30),
+
+                  // ✅ LIVE WEATHER BUTTON
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LiveWeatherScreen()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                    ),
+                    icon: const Icon(Icons.cloud_outlined),
+                    label: const Text("Check Live Weather", style: TextStyle(fontSize: 16)),
+                  ),
                 ],
               ),
             ),
     );
   }
 }
-
-

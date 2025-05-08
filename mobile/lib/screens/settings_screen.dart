@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -26,7 +27,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   DateTime endDate = DateTime.now().add(const Duration(days: 7));
 
   final List<String> locations = [
-    "Machakos", // 👈 Only valid location for now
+    "Machakos",
+    "Vhembe", // ✅ Added new location
   ];
 
   @override
