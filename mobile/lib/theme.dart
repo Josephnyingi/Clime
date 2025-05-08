@@ -2,14 +2,44 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static ThemeData lightTheme = ThemeData(
-    primaryColor: Color(0xFF00695C),
-    scaffoldBackgroundColor: Color(0xFFE0F2F1),
-    textTheme: TextTheme(
-      displayLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black), // Old: headline1
-      headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black), // Equivalent to headline2
-      bodyLarge: TextStyle(fontSize: 16, color: Colors.black54), // Equivalent to bodyText1
-      bodyMedium: TextStyle(fontSize: 14, color: Colors.black54), // Equivalent to bodyText2
+    primaryColor: const Color(0xFF00695C),
+    scaffoldBackgroundColor: const Color(0xFFE0F2F1),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF00695C),
+      foregroundColor: Colors.white,
+      elevation: 2,
+      centerTitle: true,
+      titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     ),
-    buttonTheme: const ButtonThemeData(buttonColor: Color(0xFF00695C)),
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: Color(0xFF00695C),
+      foregroundColor: Colors.white,
+    ),
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+      headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+      bodyLarge: TextStyle(fontSize: 16, color: Colors.black87),
+      bodyMedium: TextStyle(fontSize: 14, color: Colors.black54),
+    ),
+    cardTheme: CardTheme(
+      color: Colors.white,
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF00695C),
+        foregroundColor: Colors.white,
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+    ),
+    dropdownMenuTheme: DropdownMenuThemeData(
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    ),
+    iconTheme: const IconThemeData(color: Color(0xFF00695C)),
   );
 }
