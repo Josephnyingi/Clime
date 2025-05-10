@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// 🌍 **API Configuration**
 /// Update this to your actual API server URL
 /// Replace `127.0.0.1` with your public server address if deployed
-const String API_BASE_URL = "http://127.0.0.1:8000"; // 🔹 Local server (change when deploying)
+const String API_BASE_URL = "http://10.0.2.2:8000"; // 🔹 Emulator access to local server
 
 /// **🔗 API Endpoints**
 const String LOGIN_API = "$API_BASE_URL/login/";                 // ✅ Login Endpoint
