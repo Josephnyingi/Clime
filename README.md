@@ -1,6 +1,6 @@
 # 🌦️ Anga - Smart Climate Insights for Farmers
 
-### **Accurate weather predictions powered by AI & Machine Learning to help farmers plan better.**
+### **Accurate weather forecast powered by AI & Machine Learning to help farmers plan better.**
 
 ---
 
