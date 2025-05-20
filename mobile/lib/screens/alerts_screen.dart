@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/constants.dart'; // ✅ Import Constants
+import '../utils/constants.dart';   // For colors and alert types
+import '../utils/app_state.dart';   // ✅ In-memory state
 
 class AlertsScreen extends StatefulWidget {
   const AlertsScreen({super.key});
@@ -10,36 +10,14 @@ class AlertsScreen extends StatefulWidget {
 }
 
 class AlertsScreenState extends State<AlertsScreen> {
-  bool enableAlerts = true; // ✅ Toggle for notifications
-
-  // ✅ Sample alerts (Replace this with API data)
+  /// Sample alerts (🔔 replace with API fetch logic later)
   final List<Map<String, String>> alerts = [
     {"type": "Heatwave", "location": "Nairobi", "severity": "Extreme Heat", "date": "2025-03-15"},
     {"type": "Heavy Rainfall", "location": "Machakos", "severity": "Flood Risk", "date": "2025-03-16"},
     {"type": "Storm Warning", "location": "Mombasa", "severity": "Strong Winds", "date": "2025-03-17"},
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _loadPreferences();
-  }
-
-  /// **🔹 Load user preferences (Toggle state)**
-  Future<void> _loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      enableAlerts = prefs.getBool(prefKeyEnableAlerts) ?? true;
-    });
-  }
-
-  /// **🔹 Save toggle state**
-  Future<void> _savePreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(prefKeyEnableAlerts, enableAlerts);
-  }
-
-  /// **🔹 Get alert color based on severity**
+  /// Get color based on alert severity
   Color _getAlertColor(String severity) {
     switch (severity) {
       case "Extreme Heat":
@@ -64,21 +42,20 @@ class AlertsScreenState extends State<AlertsScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // **🔔 Toggle for Push Notifications**
+            /// 🔔 Alert Notifications Toggle (stored in AppState)
             SwitchListTile(
               title: const Text("Enable Alert Notifications"),
               subtitle: const Text("Get real-time severe weather alerts"),
-              value: enableAlerts,
+              value: AppState.enableExtremeAlerts,
               onChanged: (value) {
                 setState(() {
-                  enableAlerts = value;
+                  AppState.enableExtremeAlerts = value;
                 });
-                _savePreferences();
               },
             ),
             const SizedBox(height: 10),
 
-            // **🚨 Alert List**
+            /// 🚨 Alert Cards
             Expanded(
               child: alerts.isNotEmpty
                   ? ListView.builder(

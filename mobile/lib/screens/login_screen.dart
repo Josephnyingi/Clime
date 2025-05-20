@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -9,6 +8,7 @@ class LoginScreen extends StatefulWidget {
   @override
   LoginScreenState createState() => LoginScreenState();
 }
+
 class LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
@@ -23,19 +23,10 @@ class LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    // ❌ No SharedPreferences check
   }
 
-  /// ✅ **Check if user is already logged in**
-  Future<void> _checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    bool isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
-    if (isLoggedIn) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    }
-  }
-
-  /// ✅ **Handle Login**
+  /// ✅ Handle Login
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -47,16 +38,13 @@ class LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (result['success']) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool("isLoggedIn", true);
-      await prefs.setString("phone_number", phone);
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
       _showMessage("Error", result['message'], Colors.red);
     }
   }
 
-  /// ✅ **Handle Register**
+  /// ✅ Handle Register
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -75,7 +63,7 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// ✅ **Show Message Dialog**
+  /// ✅ Show Message Dialog
   void _showMessage(String title, String message, Color color) {
     showDialog(
       context: context,
@@ -95,7 +83,7 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// ✅ **Toggle Between Login/Register Mode**
+  /// ✅ Toggle Login/Register Mode
   void _toggleMode() {
     setState(() => _isRegistering = !_isRegistering);
   }
@@ -110,17 +98,16 @@ class LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // ✅ **Anga Logo & Image**
+              // ✅ Logo or image
               FadeInDown(
                 duration: const Duration(milliseconds: 500),
                 child: Image.asset(
-                  'assets/images/farming.jpg', // 📌 Ensure this image exists in assets/images/
+                  'assets/images/farming.jpg',
                   height: 200,
                 ),
               ),
               const SizedBox(height: 15),
 
-              // ✅ **Anga Description**
               FadeInUp(
                 duration: const Duration(milliseconds: 500),
                 child: Column(
@@ -141,7 +128,6 @@ class LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 25),
 
-              // ✅ **Login/Register Form**
               Form(
                 key: _formKey,
                 child: Column(
@@ -157,7 +143,6 @@ class LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // ✅ **Password Field with Visibility Toggle**
                     TextFormField(
                       controller: _passwordController,
                       decoration: InputDecoration(
@@ -173,7 +158,6 @@ class LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 10),
 
-                    // ✅ **Remember Me & Forgot Password**
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -183,7 +167,7 @@ class LoginScreenState extends State<LoginScreen> {
                               value: _rememberMe,
                               onChanged: (value) => setState(() => _rememberMe = value!),
                             ),
-                            const Text("Remember Me"),
+                            const Text("Remember Me"), // 📝 UI only for now
                           ],
                         ),
                         TextButton(
@@ -194,7 +178,6 @@ class LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // ✅ **Login/Register Button**
                     _isLoading
                         ? const CircularProgressIndicator()
                         : ElevatedButton(
@@ -207,7 +190,6 @@ class LoginScreenState extends State<LoginScreen> {
                           ),
                     const SizedBox(height: 10),
 
-                    // ✅ **Switch Between Login/Register**
                     TextButton(
                       onPressed: _toggleMode,
                       child: Text(_isRegistering ? "Already have an account? Login" : "Don't have an account? Register"),
@@ -222,3 +204,4 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

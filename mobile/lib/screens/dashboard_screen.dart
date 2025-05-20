@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../services/weather_services.dart';
 import '../services/live_weather_service.dart';
 import '../utils/helpers.dart';
+import '../utils/app_state.dart'; // ✅ new global state
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,31 +20,40 @@ class DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic> currentWeather = {};
   Map<String, dynamic> liveWeather = {};
   bool isLoading = true;
-  bool isDarkMode = false;
-  String selectedLocation = "Machakos";
-  DateTime? startDate;
-  DateTime? endDate;
+
+  // Track previous settings
+  String _prevLocation = AppState.selectedLocation;
+  DateTime _prevStartDate = AppState.startDate;
+  DateTime _prevEndDate = AppState.endDate;
 
   @override
   void initState() {
     super.initState();
-    _loadPreferencesAndFetchWeather();
+    fetchWeather();
   }
 
-  Future<void> _loadPreferencesAndFetchWeather() async {
-    final prefs = await SharedPreferences.getInstance();
-    final storedLocation = prefs.getString('location') ?? "Machakos";
-    final storedStart = prefs.getString('startDate');
-    final storedEnd = prefs.getString('endDate');
-
-    setState(() {
-      selectedLocation = storedLocation;
-      isDarkMode = prefs.getBool('isDarkMode') ?? false;
-      startDate = storedStart != null ? DateTime.tryParse(storedStart) : DateTime.now().subtract(const Duration(days: 6));
-      endDate = storedEnd != null ? DateTime.tryParse(storedEnd) : DateTime.now();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForSettingsChange();
     });
+  }
 
-    fetchWeather(); // 🌦 Trigger API fetch
+  void _checkForSettingsChange() {
+    if (_prevLocation != AppState.selectedLocation ||
+        _prevStartDate != AppState.startDate ||
+        _prevEndDate != AppState.endDate) {
+      _prevLocation = AppState.selectedLocation;
+      _prevStartDate = AppState.startDate;
+      _prevEndDate = AppState.endDate;
+
+      fetchWeather();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("🔄 Settings changed. Refreshing data...")),
+      );
+    }
   }
 
   Future<void> fetchWeather() async {
@@ -55,14 +64,12 @@ class DashboardScreenState extends State<DashboardScreen> {
     await _fetchCurrentWeather();
     await _fetchForecast();
 
-    setState(() => isLoading = false);
+    if (mounted) setState(() => isLoading = false);
   }
 
   Future<void> _fetchLiveWeather() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final loc = prefs.getString('location') ?? "Machakos";
-      final data = await LiveWeatherService.getLiveWeather(loc.toLowerCase());
+      final data = await LiveWeatherService.getLiveWeather(AppState.selectedLocation.toLowerCase());
       if (mounted) setState(() => liveWeather = data);
     } catch (e) {
       logMessage("❌ Live weather fetch error: $e");
@@ -77,9 +84,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   Future<void> _fetchCurrentWeather() async {
     try {
       final date = formatApiDate(DateTime.now());
-      final prefs = await SharedPreferences.getInstance();
-      final loc = prefs.getString('location') ?? "Machakos";
-      final data = await WeatherService.getWeather(date, loc);
+      final data = await WeatherService.getWeather(date, AppState.selectedLocation);
       if (mounted) setState(() => currentWeather = data);
     } catch (e) {
       logMessage("❌ Predicted weather fetch error: $e");
@@ -91,13 +96,10 @@ class DashboardScreenState extends State<DashboardScreen> {
       List<Map<String, dynamic>> weatherData = [];
       forecastDates.clear();
 
-      final prefs = await SharedPreferences.getInstance();
-      final loc = prefs.getString('location') ?? "Machakos";
-
-      for (DateTime date = startDate!;
-          date.isBefore(endDate!.add(const Duration(days: 1)));
+      for (DateTime date = AppState.startDate;
+          date.isBefore(AppState.endDate.add(const Duration(days: 1)));
           date = date.add(const Duration(days: 1))) {
-        final data = await WeatherService.getWeather(formatApiDate(date), loc);
+        final data = await WeatherService.getWeather(formatApiDate(date), AppState.selectedLocation);
         forecastDates.add(DateFormat('d/M').format(date));
         weatherData.add({
           "day": weatherData.length.toDouble(),
@@ -129,6 +131,8 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
       appBar: AppBar(
@@ -160,7 +164,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Live Weather in $selectedLocation",
+                          Text("Live Weather in ${AppState.selectedLocation}",
                               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDarkMode ? Colors.white : Colors.black87)),
                           const SizedBox(height: 8),
                           Text("📅 Date: ${liveWeather['date'] ?? '--'}"),
@@ -245,3 +249,4 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
+

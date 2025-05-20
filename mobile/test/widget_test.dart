@@ -1,26 +1,18 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:anga/main.dart';
 
 void main() {
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({
-      'isLoggedIn': false,
-      'isDarkMode': false,
-    });
-  });
-
   testWidgets('App starts on LoginScreen', (WidgetTester tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: AngaApp(isLoggedIn: false, initialTheme: false),
+        home: AngaApp(),
       ),
     );
 
-    await tester.pumpAndSettle(); // ✅ Ensure all animations settle
+    await tester.pumpAndSettle(); // Ensure animations are done
 
-    // ✅ Find only the main Login text instead of multiple 'Login'
-    expect(find.textContaining('Welcome Back'), findsOneWidget);
+    // 🔍 Change this to match actual Login screen content
+    expect(find.textContaining('Login'), findsOneWidget);
   });
 }

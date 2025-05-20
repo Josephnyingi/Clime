@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../utils/constants.dart';
+import '../utils/app_state.dart'; // ✅ new shared state
 
 class SettingsScreen extends StatefulWidget {
-  final Future<void> Function(bool) setTheme;
+  final Function(bool) setTheme;
 
   const SettingsScreen({super.key, required this.setTheme});
 
@@ -13,55 +13,17 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String selectedLocation = defaultLocation;
-  bool isCelsius = defaultIsCelsius;
-  bool isMillimeters = defaultIsMillimeters;
-  bool enableNotifications = defaultEnableNotifications;
-  bool enableExtremeAlerts = defaultEnableExtremeAlerts;
-  bool isDarkMode = false;
-
   final TextEditingController _searchController = TextEditingController();
-
-  DateTime startDate = DateTime.now();
-  DateTime endDate = DateTime.now().add(const Duration(days: 7));
 
   final List<String> locations = [
     "Machakos",
-    "Vhembe", // ✅ Added new location
+    "Vhembe",
   ];
 
   @override
   void initState() {
     super.initState();
-    _loadPreferences();
-  }
-
-  Future<void> _loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    String storedLocation = prefs.getString(prefKeyLocation) ?? defaultLocation;
-
-    setState(() {
-      selectedLocation = locations.contains(storedLocation) ? storedLocation : defaultLocation;
-      isCelsius = prefs.getBool(prefKeyIsCelsius) ?? defaultIsCelsius;
-      isMillimeters = prefs.getBool(prefKeyIsMillimeters) ?? defaultIsMillimeters;
-      enableNotifications = prefs.getBool(prefKeyEnableNotifications) ?? defaultEnableNotifications;
-      enableExtremeAlerts = prefs.getBool(prefKeyEnableExtremeAlerts) ?? defaultEnableExtremeAlerts;
-      isDarkMode = prefs.getBool(prefKeyIsDarkMode) ?? false;
-      startDate = DateTime.tryParse(prefs.getString(prefKeyStartDate) ?? '') ?? DateTime.now();
-      endDate = DateTime.tryParse(prefs.getString(prefKeyEndDate) ?? '') ?? DateTime.now().add(const Duration(days: 7));
-    });
-  }
-
-  Future<void> _savePreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(prefKeyLocation, selectedLocation);
-    await prefs.setBool(prefKeyIsCelsius, isCelsius);
-    await prefs.setBool(prefKeyIsMillimeters, isMillimeters);
-    await prefs.setBool(prefKeyEnableNotifications, enableNotifications);
-    await prefs.setBool(prefKeyEnableExtremeAlerts, enableExtremeAlerts);
-    await prefs.setBool(prefKeyIsDarkMode, isDarkMode);
-    await prefs.setString(prefKeyStartDate, startDate.toIso8601String());
-    await prefs.setString(prefKeyEndDate, endDate.toIso8601String());
+    // Nothing to load now, all from AppState
   }
 
   Future<void> _selectDateRange() async {
@@ -69,15 +31,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
-      initialDateRange: DateTimeRange(start: startDate, end: endDate),
+      initialDateRange: DateTimeRange(start: AppState.startDate, end: AppState.endDate),
     );
 
     if (picked != null) {
       setState(() {
-        startDate = picked.start;
-        endDate = picked.end;
+        AppState.startDate = picked.start;
+        AppState.endDate = picked.end;
       });
-      _savePreferences();
     }
   }
 
@@ -94,13 +55,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             _buildSectionTitle("Preferred Location"),
             DropdownButton<String>(
-              value: selectedLocation,
+              value: AppState.selectedLocation,
               isExpanded: true,
               onChanged: (newValue) {
                 setState(() {
-                  selectedLocation = newValue!;
+                  AppState.selectedLocation = newValue!;
                 });
-                _savePreferences();
               },
               items: locations.map((location) {
                 return DropdownMenuItem(
@@ -114,48 +74,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             _buildSectionTitle("Select Forecast Date Range"),
             ListTile(
-              title: Text("From: ${DateFormat('yyyy-MM-dd').format(startDate)}"),
+              title: Text("From: ${DateFormat('yyyy-MM-dd').format(AppState.startDate)}"),
               trailing: const Icon(Icons.calendar_today),
               onTap: _selectDateRange,
             ),
             ListTile(
-              title: Text("To: ${DateFormat('yyyy-MM-dd').format(endDate)}"),
+              title: Text("To: ${DateFormat('yyyy-MM-dd').format(AppState.endDate)}"),
               trailing: const Icon(Icons.calendar_today),
               onTap: _selectDateRange,
             ),
 
             const SizedBox(height: 20),
 
-            _buildSwitchTile("Use Celsius (°C)", isCelsius, (value) {
-              setState(() => isCelsius = value);
-              _savePreferences();
+            _buildSwitchTile("Use Celsius (°C)", AppState.isCelsius, (value) {
+              setState(() => AppState.isCelsius = value);
             }),
 
             const SizedBox(height: 20),
 
-            _buildSwitchTile("Use Millimeters (mm)", isMillimeters, (value) {
-              setState(() => isMillimeters = value);
-              _savePreferences();
+            _buildSwitchTile("Use Millimeters (mm)", AppState.isMillimeters, (value) {
+              setState(() => AppState.isMillimeters = value);
             }),
 
             const SizedBox(height: 20),
 
-            _buildSwitchTile("Enable Dark Mode", isDarkMode, (value) {
-              setState(() => isDarkMode = value);
+            _buildSwitchTile("Enable Dark Mode", AppState.isDarkMode, (value) {
+              setState(() {
+                AppState.isDarkMode = value;
+              });
               widget.setTheme(value);
-              _savePreferences();
             }),
 
             const SizedBox(height: 30),
 
             ElevatedButton(
-              onPressed: _savePreferences,
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Settings applied successfully")),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              child: const Text("Save Settings"),
+              child: const Text("Apply Settings"),
             ),
           ],
         ),
@@ -181,4 +144,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-

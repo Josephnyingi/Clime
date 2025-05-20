@@ -1,25 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/live_weather_screen.dart'; // ✅ Import LiveWeatherScreen
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-  bool isDarkMode = prefs.getBool('isDarkMode') ?? false;
-
-  runApp(AngaApp(isLoggedIn: isLoggedIn, initialTheme: isDarkMode));
+  runApp(const AngaApp());
 }
 
 class AngaApp extends StatefulWidget {
-  final bool isLoggedIn;
-  final bool initialTheme;
-
-  const AngaApp({super.key, required this.isLoggedIn, required this.initialTheme});
+  const AngaApp({super.key});
 
   @override
   AngaAppState createState() => AngaAppState();
@@ -28,20 +20,10 @@ class AngaApp extends StatefulWidget {
 class AngaAppState extends State<AngaApp> {
   bool isDarkMode = false;
 
-  @override
-  void initState() {
-    super.initState();
-    isDarkMode = widget.initialTheme;
-  }
-
-  Future<void> _setTheme(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        isDarkMode = value;
-      });
-    }
-    await prefs.setBool('isDarkMode', value);
+  void _setTheme(bool value) {
+    setState(() {
+      isDarkMode = value;
+    });
   }
 
   @override
@@ -52,20 +34,20 @@ class AngaAppState extends State<AngaApp> {
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      initialRoute: widget.isLoggedIn ? '/dashboard' : '/',
+      initialRoute: '/', // ✅ Always require login on app launch
       routes: {
         '/': (context) => const LoginScreen(),
         '/dashboard': (context) => MainScreen(setTheme: _setTheme),
         '/alerts': (context) => const AlertsScreen(),
         '/settings': (context) => SettingsScreen(setTheme: _setTheme),
-        '/live_weather': (context) => const LiveWeatherScreen(), // ✅ Live weather route
+        '/live_weather': (context) => const LiveWeatherScreen(),
       },
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
-  final Future<void> Function(bool) setTheme;
+  final void Function(bool) setTheme;
 
   const MainScreen({super.key, required this.setTheme});
 
@@ -97,12 +79,8 @@ class MainScreenState extends State<MainScreen> {
     }
   }
 
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', false);
-    if (mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-    }
+  void _logout() {
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
   void _fetchWeatherUpdate() {
