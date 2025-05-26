@@ -6,7 +6,7 @@ import pandas as pd
 import pickle
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = FastAPI()
 
@@ -37,31 +37,63 @@ SUPPORTED_LOCATIONS = {
 
 # PREDICTION ENDPOINT
 class PredictionRequest(BaseModel):
-    date: str
+    date: str # Expected format: YYYY-MM-DD
     location: str = "machakos"  # ✅ Default location
+
 
 @app.post("/predict/")
 async def predict_weather(request: PredictionRequest):
     location = request.location.lower()
     if location not in SUPPORTED_LOCATIONS:
-        raise HTTPException(status_code=400, detail="Unsupported location. Use 'machakos' or 'vhembe'.")
+        raise HTTPException(status_code=400, detail="Unsupported location.")
 
     try:
-        date = pd.to_datetime(request.date)
+        date = pd.to_datetime(request.date).date()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 
-    future_df = pd.DataFrame({'ds': [date]})
-    temp_prediction = temp_model.predict(future_df).iloc[0]["yhat"]
-    rain_prediction = rain_model.predict(future_df).iloc[0]["yhat"]
+    today = datetime.now().date()
+    delta_days = (date - today).days
 
-    return {
-        "date": request.date,
-        "location": location.title(),
-        "temperature_prediction": round(temp_prediction, 2),
-        "rain_prediction": round(rain_prediction, 2)
-    }
+    if delta_days <= 16:
+        # 🔗 Use Open-Meteo forecast
+        coords = SUPPORTED_LOCATIONS[location]
+        url = (
+            f"https://api.open-meteo.com/v1/forecast?"
+            f"latitude={coords['lat']}&longitude={coords['lon']}"
+            f"&daily=temperature_2m_max,precipitation_sum"
+            f"&start_date={date}&end_date={date}"
+            "&timezone=Africa%2FNairobi"
+        )
 
+        try:
+            res = requests.get(url)
+            res.raise_for_status()
+            data = res.json()
+            return {
+                "source": "open-meteo",
+                "date": str(date),
+                "location": location.title(),
+                "temperature_prediction": data["daily"]["temperature_2m_max"][0],
+                "rain_prediction": data["daily"]["precipitation_sum"][0]
+            }
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Open-Meteo failed: {str(e)}")
+
+    else:
+        # 🤖 Use ML model for long-range prediction
+        future_df = pd.DataFrame({'ds': [date]})
+        temp_prediction = temp_model.predict(future_df).iloc[0]["yhat"]
+        rain_prediction = rain_model.predict(future_df).iloc[0]["yhat"]
+
+        return {
+            "source": "ml-model",
+            "date": str(date),
+            "location": location.title(),
+            "temperature_prediction": round(temp_prediction, 2),
+            "rain_prediction": round(rain_prediction, 2)
+        }
+    
 # SAVE PREDICTION
 @app.post("/save_prediction/")
 def save_prediction(date: str, location: str, temperature: float, rain: float, db: Session = Depends(get_db)):
