@@ -13,7 +13,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final TextEditingController _searchController = TextEditingController();
 
   final List<String> locations = [
     "Machakos",
