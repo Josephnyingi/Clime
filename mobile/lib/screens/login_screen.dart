@@ -23,10 +23,8 @@ class LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // ❌ No SharedPreferences check
   }
 
-  /// ✅ Handle Login
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -44,7 +42,6 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// ✅ Handle Register
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -63,7 +60,18 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// ✅ Show Message Dialog
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    final result = await _authService.signInWithGoogle();
+    setState(() => _isLoading = false);
+
+    if (result['success']) {
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    } else {
+      _showMessage("Google Sign-In Failed", result['message'], Colors.red);
+    }
+  }
+
   void _showMessage(String title, String message, Color color) {
     showDialog(
       context: context,
@@ -83,7 +91,6 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// ✅ Toggle Login/Register Mode
   void _toggleMode() {
     setState(() => _isRegistering = !_isRegistering);
   }
@@ -98,7 +105,6 @@ class LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // ✅ Logo or image
               FadeInDown(
                 duration: const Duration(milliseconds: 500),
                 child: Image.asset(
@@ -167,7 +173,7 @@ class LoginScreenState extends State<LoginScreen> {
                               value: _rememberMe,
                               onChanged: (value) => setState(() => _rememberMe = value!),
                             ),
-                            const Text("Remember Me"), // 📝 UI only for now
+                            const Text("Remember Me"),
                           ],
                         ),
                         TextButton(
@@ -190,6 +196,17 @@ class LoginScreenState extends State<LoginScreen> {
                           ),
                     const SizedBox(height: 10),
 
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.login, color: Colors.white),
+                      label: const Text("Sign in with Google"),
+                      onPressed: _handleGoogleSignIn,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
                     TextButton(
                       onPressed: _toggleMode,
                       child: Text(_isRegistering ? "Already have an account? Login" : "Don't have an account? Register"),
@@ -204,4 +221,3 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:label="anga"
+        android:value="787124550080-oc9dcrp8ibabhtfffhgc3u374d5tgjh5.apps.googleusercontent.com"/
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

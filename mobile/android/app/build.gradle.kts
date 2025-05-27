@@ -10,6 +10,7 @@ android {
     namespace = "com.example.anga"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+    minSdkVersion 19 // Minimum SDK version for Flutter is 19, but you can change it if needed.
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
