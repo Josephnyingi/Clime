@@ -10,8 +10,11 @@ environment:
   sdk: ^3.7.0
 
 dependencies:
+  # Flutter SDK
   flutter:
     sdk: flutter
+  firebase_core: ^2.32.0
+  firebase_auth: ^4.16.0
 
   # Cupertino Icons for iOS-style icons
   cupertino_icons: ^1.0.8
@@ -52,4 +55,6 @@ flutter:
   assets:
     - assets/images/farming.jpg
     
+
+
 
