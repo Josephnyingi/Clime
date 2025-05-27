@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "787124550080",
+    "project_id": "anga-744bd",
+    "storage_bucket": "anga-744bd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:787124550080:android:0ddb97f161629635997025",
+        "android_client_info": {
+          "package_name": "com.example.anga"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "787124550080-oc9dcrp8ibabhtfffhgc3u374d5tgjh5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0v1vhKMFBt28rNbcmLZ38UKyDPIBiLhg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "787124550080-oc9dcrp8ibabhtfffhgc3u374d5tgjh5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
