@@ -15,6 +15,7 @@ dependencies:
     sdk: flutter
   firebase_core: ^2.32.0
   firebase_auth: ^4.16.0
+  google_sign_in: ^6.1.5
 
   # Cupertino Icons for iOS-style icons
   cupertino_icons: ^1.0.8
