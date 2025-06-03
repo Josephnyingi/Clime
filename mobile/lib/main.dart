@@ -4,20 +4,22 @@ import 'screens/dashboard_screen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/live_weather_screen.dart'; // ✅ Import LiveWeatherScreen
+import 'package:firebase_core/firebase_core.dart'; // ✅ Import Firebase
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const AngaApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();  // Ensure Flutter bindings are initialized
+  await Firebase.initializeApp();  // Initialize Firebase before app starts
+  runApp(MyApp());  // Run your app after Firebase is initialized
 }
 
-class AngaApp extends StatefulWidget {
-  const AngaApp({super.key});
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
 
   @override
-  AngaAppState createState() => AngaAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
-class AngaAppState extends State<AngaApp> {
+class _MyAppState extends State<MyApp> {
   bool isDarkMode = false;
 
   void _setTheme(bool value) {

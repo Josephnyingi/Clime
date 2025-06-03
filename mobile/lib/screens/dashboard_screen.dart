@@ -3,8 +3,12 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../services/weather_services.dart';
 import '../services/live_weather_service.dart';
-import '../utils/helpers.dart';
 import '../utils/app_state.dart'; // ✅ new global state
+
+String formatApiDate(DateTime date) {
+  // Example: returns 'yyyy-MM-dd'
+  return DateFormat('yyyy-MM-dd').format(date);
+}
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -72,7 +76,7 @@ class DashboardScreenState extends State<DashboardScreen> {
       final data = await LiveWeatherService.getLiveWeather(AppState.selectedLocation.toLowerCase());
       if (mounted) setState(() => liveWeather = data);
     } catch (e) {
-      logMessage("❌ Live weather fetch error: $e");
+      print("❌ Live weather fetch error: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("⚠️ Could not load live weather")),
@@ -87,7 +91,7 @@ class DashboardScreenState extends State<DashboardScreen> {
       final data = await WeatherService.getWeather(date, AppState.selectedLocation);
       if (mounted) setState(() => currentWeather = data);
     } catch (e) {
-      logMessage("❌ Predicted weather fetch error: $e");
+      print("❌ Predicted weather fetch error: $e");
     }
   }
 
@@ -125,7 +129,7 @@ class DashboardScreenState extends State<DashboardScreen> {
         });
       }
     } catch (e) {
-      logMessage("❌ Forecast fetch error: $e");
+      print("❌ Forecast fetch error: $e");
     }
   }
 
