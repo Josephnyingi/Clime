@@ -53,6 +53,7 @@ class WeatherChart extends StatelessWidget {
                   barWidth: 3,
                   isStrokeCapRound: true,
                   belowBarData: BarAreaData(
+                      // ignore: deprecated_member_use
                       show: true, color: Colors.redAccent.withOpacity(0.3)),
                 ),
               ],

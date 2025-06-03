@@ -17,6 +17,8 @@ void main() {
 }
 
 class AngaApp extends StatelessWidget {
+  const AngaApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Replace with your actual LoginScreen or main app widget

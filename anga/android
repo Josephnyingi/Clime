@@ -1,0 +1,11 @@
+
+mkdir "C:\Users\mrjos\Clime\anga\android"
+
+cd "C:\Users\mrjos\Clime\anga\android"
+
+REM If you see 'gradle' is not recognized, you need to install Gradle or use the Gradle Wrapper.
+REM To use the Gradle Wrapper, run the following if you have a gradlew file in your project:
+REM .\gradlew init
+
+REM If you don't have Gradle installed, download it from https://gradle.org/install/
+REM Or use a package manager like Chocolatey: choco install gradle

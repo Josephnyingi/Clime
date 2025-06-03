@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'dart:io'; // 👈 For platform check
 import 'package:http/http.dart' as http;
