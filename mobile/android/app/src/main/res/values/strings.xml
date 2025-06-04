@@ -1,0 +1,4 @@
+<resources>
+    <!-- Add the Google Client ID here -->
+    <string name="google_client_id">787124550080-oc9dcrp8ibabhtfffhgc3u374d5tgjh5.apps.googleusercontent.com</string>
+</resources>
