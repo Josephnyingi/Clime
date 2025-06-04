@@ -11,7 +11,7 @@ plugins {
 android {
     ndkVersion = "27.0.12077973"  // Set the NDK version
     namespace = "com.example.anga"  // Set the app namespace
-    compileSdk = 33  // Set compile SDK version
+    compileSdk = 35 // Set compile SDK version
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11  // Use Java 11 for compiling
@@ -25,7 +25,7 @@ android {
     defaultConfig {
         applicationId = "com.example.anga"  // Unique application ID for your app
         minSdk = flutter.minSdkVersion  // Set min SDK version from Flutter config
-        targetSdk = 33  // Set target SDK version
+        targetSdk = 35  // Set target SDK version
         versionCode = flutter.versionCode  // Use Flutter's version code
         versionName = flutter.versionName  // Use Flutter's version name
     }
