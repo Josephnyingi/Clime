@@ -1,48 +1,53 @@
 plugins {
-    id("com.android.application")
-    // START: FlutterFire Configuration
+    id("com.android.application")  // Apply Android application plugin
+
+    // Apply the Google services plugin to enable Firebase
     id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id("dev.flutter.flutter-gradle-plugin")
+
+    id("kotlin-android")  // Apply Kotlin plugin for Android development
+    id("dev.flutter.flutter-gradle-plugin")  // Apply Flutter plugin for Android
 }
 
 android {
-    ndkVersion = "27.0.12077973"
-    namespace = "com.example.anga"
-    compileSdk = 33
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"  // Set the NDK version
+    namespace = "com.example.anga"  // Set the app namespace
+    compileSdk = 33  // Set compile SDK version
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_11  // Use Java 11 for compiling
+        targetCompatibility = JavaVersion.VERSION_11  // Set target compatibility to Java 11
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_11.toString()  // Set Kotlin JVM target to Java 11
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.anga"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = 33
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        applicationId = "com.example.anga"  // Unique application ID for your app
+        minSdk = flutter.minSdkVersion  // Set min SDK version from Flutter config
+        targetSdk = 33  // Set target SDK version
+        versionCode = flutter.versionCode  // Use Flutter's version code
+        versionName = flutter.versionName  // Use Flutter's version name
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("debug")  // Use debug signing config for release
         }
     }
 }
 
+dependencies {
+    // Import the Firebase Bill of Materials (BoM) for managing Firebase versions
+    implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
+
+    // Firebase Authentication SDK
+    implementation("com.google.firebase:firebase-auth")
+
+    // Firebase Analytics SDK
+    implementation("com.google.firebase:firebase-analytics")
+}
+
 flutter {
-    source = "../.."
+    source = "../.."  // Set the source path for Flutter
 }
