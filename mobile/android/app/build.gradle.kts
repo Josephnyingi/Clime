@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")  // Apply Android application plugin
 
     // Apply the Google services plugin to enable Firebase
-    id("com.google.gms.google-services")
+    id("com.google.gms.google-services")  // This is for Firebase services (Google Sign-In, Firebase Analytics, etc.)
 
     id("kotlin-android")  // Apply Kotlin plugin for Android development
     id("dev.flutter.flutter-gradle-plugin")  // Apply Flutter plugin for Android
@@ -11,7 +11,7 @@ plugins {
 android {
     ndkVersion = "27.0.12077973"  // Set the NDK version
     namespace = "com.example.anga"  // Set the app namespace
-    compileSdk = 35 // Set compile SDK version
+    compileSdk = 35 // Set compile SDK version to 35
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11  // Use Java 11 for compiling
@@ -46,6 +46,8 @@ dependencies {
 
     // Firebase Analytics SDK
     implementation("com.google.firebase:firebase-analytics")
+
+    // Add any other Firebase dependencies you need (like Firestore, Realtime Database, etc.)
 }
 
 flutter {
