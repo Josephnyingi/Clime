@@ -23,15 +23,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
@@ -73,4 +67,25 @@ class DefaultFirebaseOptions {
     storageBucket: 'anga-744bd.firebasestorage.app',
     measurementId: 'G-GE8GS68B7B',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyC40KUVJqzaPuZoeM2Or2aCxzmmbrMrA3c',
+    appId: '1:787124550080:ios:5e359d47d418343d997025',
+    messagingSenderId: '787124550080',
+    projectId: 'anga-744bd',
+    storageBucket: 'anga-744bd.firebasestorage.app',
+    iosClientId: '787124550080-ifileegjn4inkek4sg6r0gds4hols6hl.apps.googleusercontent.com',
+    iosBundleId: 'com.example.anga',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyC40KUVJqzaPuZoeM2Or2aCxzmmbrMrA3c',
+    appId: '1:787124550080:ios:5e359d47d418343d997025',
+    messagingSenderId: '787124550080',
+    projectId: 'anga-744bd',
+    storageBucket: 'anga-744bd.firebasestorage.app',
+    iosClientId: '787124550080-ifileegjn4inkek4sg6r0gds4hols6hl.apps.googleusercontent.com',
+    iosBundleId: 'com.example.anga',
+  );
+
 }

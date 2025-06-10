@@ -39,13 +39,18 @@ android {
 
 dependencies {
     // Import the Firebase Bill of Materials (BoM) for managing Firebase versions
-    implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
 
     // Firebase Authentication SDK
     implementation("com.google.firebase:firebase-auth")
 
     // Firebase Analytics SDK
     implementation("com.google.firebase:firebase-analytics")
+    implementation(project(":"))
+    implementation(project(":"))
+    implementation("com.android.support:support-annotations:28.0.0")
+    implementation("androidx.annotation:annotation:1.9.1")
+    implementation("com.android.support:support-v4:28.0.0")
 
     // Add any other Firebase dependencies you need (like Firestore, Realtime Database, etc.)
 }
@@ -53,3 +58,4 @@ dependencies {
 flutter {
     source = "../.."  // Set the source path for Flutter
 }
+
