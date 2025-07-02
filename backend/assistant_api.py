@@ -4,38 +4,40 @@ from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
 
-# 🔁 Step 1: Import the assistant logic from Streamlit app
-# Add the assistant path to sys.path to import its logic
-assistant_path = os.path.abspath("../models/ai_farming_assistant")
+# Step 1: Add assistant path to sys.path
+assistant_path = os.path.abspath("../models/AI-Farming-Assistant-App")
 sys.path.append(assistant_path)
 
+# Step 2: Import the response generator
 try:
-    from app import generate_response  # Make sure your Streamlit app has this function
+    from assistant_core import generate_response
 except ImportError:
-    raise ImportError("Could not import `generate_response` from Streamlit app.py")
+    raise ImportError("❌ Could not import `generate_response()` from assistant_core.py")
 
-# 🔧 Step 2: Define FastAPI app
+# Step 3: Init FastAPI app
 app = FastAPI(
-    title="AI Farming Assistant API",
-    description="Exposes the AI farming assistant via REST endpoint for ANGA",
+    title="ANGA - AI Farming Assistant API",
+    description="An API endpoint to ask farming & climate questions via LLM",
     version="1.0.0"
 )
 
-# 🌐 CORS (optional - allow mobile or web frontends)
+# Step 4: Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # change this in prod
+    allow_origins=["*"],  # ✅ safe for local dev
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 📦 Step 3: Request and Response Schema
-class Query(BaseModel):
+# Step 5: Define schema
+class Question(BaseModel):
     query: str
+    use_case: str = "Smart Farming Advice"
 
-# 🚀 Step 4: Define endpoint
+# Step 6: Endpoint
 @app.post("/ask")
-def ask_farming_assistant(q: Query):
-    answer = generate_response(q.query)
+def ask_ai_farming_assistant(data: Question):
+    answer = generate_response(data.query, data.use_case)
     return {"answer": answer}
+   
