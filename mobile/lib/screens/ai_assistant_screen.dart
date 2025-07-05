@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/ai_assistant_service.dart';
 
 class AIAssistantScreen extends StatefulWidget {
-  const AIAssistantScreen({Key? key}) : super(key: key);
+  const AIAssistantScreen({super.key});
 
   @override
   State<AIAssistantScreen> createState() => _AIAssistantScreenState();

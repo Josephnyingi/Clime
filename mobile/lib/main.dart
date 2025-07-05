@@ -6,6 +6,8 @@ import 'screens/settings_screen.dart';
 import 'screens/live_weather_screen.dart'; // ✅ Import LiveWeatherScreen
 import 'package:firebase_core/firebase_core.dart'; // ✅ Import Firebase
 import 'firebase_options.dart';
+import 'screens/ai_assistant_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();  // Ensure Flutter bindings are initialized
@@ -66,6 +68,7 @@ class _MyAppState extends State<MyApp> {
         '/alerts': (context) => const AlertsScreen(),
         '/settings': (context) => SettingsScreen(setTheme: _setTheme),
         '/live_weather': (context) => const LiveWeatherScreen(),
+        '/ai_assistant': (context) => const AIAssistantScreen(), // <-- Add this line
       },
     );
   }
@@ -154,6 +157,11 @@ class MainScreenState extends State<MainScreen> {
               title: const Text('Settings'),
               onTap: () => Navigator.pushReplacementNamed(context, '/settings'),
             ),
+            ListTile(
+              leading: const Icon(Icons.assistant),
+              title: const Text('AI Assistant'),
+              onTap: () => Navigator.pushReplacementNamed(context, '/ai_assistant'),
+            ), 
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
