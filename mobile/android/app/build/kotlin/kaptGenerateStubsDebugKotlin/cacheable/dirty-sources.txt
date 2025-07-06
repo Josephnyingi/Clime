@@ -1,0 +1,1 @@
+C:\Users\mrjos\Clime\mobile\android\app\src\main\kotlin\com\example\anga\MainActivity.kt
